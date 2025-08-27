@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Or, Repository } from 'typeorm';
 
 @Injectable()
 export class UsuarioService {
@@ -12,8 +12,25 @@ export class UsuarioService {
     private readonly usuarioRepository: Repository<Usuario>,
   ) {}
 
-  create(createUsuarioDto: CreateUsuarioDto) {
-    return 'This action adds a new usuario';
+  async registerUsuario(createUsuarioDto: CreateUsuarioDto) {
+    try {
+      const existingUsuario = await this.usuarioRepository.findOne({
+        where: [
+          { email: createUsuarioDto.email },
+          { username: createUsuarioDto.username }
+        ],
+      });
+      if (existingUsuario) {
+        throw new ConflictException('Usuario already exists');
+      }
+      const usuario = this.usuarioRepository.create(createUsuarioDto);
+      return await this.usuarioRepository.save(usuario);
+    } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error creating usuario', error.message);
+    }
   }
 
   findAll() {
