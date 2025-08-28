@@ -4,7 +4,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { LocalAuthGuard } from './auth/local-auth.guard';
 import { AuthService } from './auth/auth.service';
 import { ApiTags } from '@nestjs/swagger';
-const IResponse = require('../utils/IResponse.handle');
+const IResponse = require('./utils/IResponse.handle');
 
 @ApiTags('auth')
 @Controller()

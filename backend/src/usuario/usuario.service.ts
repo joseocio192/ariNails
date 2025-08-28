@@ -38,7 +38,8 @@ export class UsuarioService {
       }
       let usuario = this.usuarioRepository.create(usuarioSanitizado);
       await this.usuarioRepository.save(usuario);
-      return usuario;
+      const usuarioRegistrado = await this.usuarioRepository.findOneOrFail({ where: { id: usuario.id } });
+      return usuarioRegistrado;
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
