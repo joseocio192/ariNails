@@ -12,7 +12,7 @@ import { Usuario } from 'src/usuario/entities/usuario.entity';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsuarioService,
+    private usersService: UsuarioService,
     private jwtService: JwtService,
   ) {}
 
@@ -47,7 +47,7 @@ export class AuthService {
 
   async login(user: any) {
     try {
-      const payload = { username: user.username, userId: user.id };
+      const payload = { usuario: user.usuario, userId: user.id };
       const accessToken = this.jwtService.sign(payload);
       return accessToken;
     } catch (error) {

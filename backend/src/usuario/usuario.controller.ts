@@ -1,15 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+const IResponse = require('../utils/IResponse.handle');
 
 @Controller('usuario')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
-  @Post()
-  @UseGuards(JwtAuthGuard)
+  @Post('/cliente')
   async create(@Body() createUsuarioDto: CreateUsuarioDto) {
-    return await this.usuarioService.registerUsuario(createUsuarioDto);
+    return IResponse(await this.usuarioService.registerUsuarioCliente(createUsuarioDto), 'cliente registrado exitosamente', true);
   }
 }

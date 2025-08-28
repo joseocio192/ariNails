@@ -21,20 +21,23 @@ export class UsuarioService {
    * @param createUsuarioDto - The data transfer object containing usuario details
    * @returns The newly created usuario
    */
-  async registerUsuario(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
+  async registerUsuarioCliente(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
     try {
       const existingUsuario = await this.usuarioRepository.findOne({
         where: [
           { email: createUsuarioDto.email },
-          { username: createUsuarioDto.username },
+          { usuario: createUsuarioDto.usuario },
         ],
       });
       if (existingUsuario) {
         throw new ConflictException('Usuario already exists');
       }
-      let usuario = this.usuarioRepository.create(createUsuarioDto);
-      await usuario.hashPassword();
-      usuario = await this.usuarioRepository.save(usuario);
+      const usuarioSanitizado = {
+        ...createUsuarioDto,
+        rol: { id: 1 },
+      }
+      let usuario = this.usuarioRepository.create(usuarioSanitizado);
+      await this.usuarioRepository.save(usuario);
       return usuario;
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -46,7 +49,6 @@ export class UsuarioService {
       );
     }
   }
-
 
   /**
    * Find a usuario by ID
@@ -70,7 +72,6 @@ export class UsuarioService {
     }
   }
 
-
   /**
    * Find a usuario by username
    * @param username - The username of the usuario to find
@@ -79,7 +80,7 @@ export class UsuarioService {
   async findOneWithUsername(username: string): Promise<Usuario> {
     try {
       const usuario = await this.usuarioRepository.findOne({
-        where: { username },
+        where: { usuario: username },
       });
       if (!usuario) {
         throw new NotFoundException(

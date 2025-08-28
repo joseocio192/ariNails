@@ -11,7 +11,7 @@ export class CreateUsuarioDto {
     apellidoMaterno: string;
 
     @IsString()
-    username: string;
+    usuario: string;
 
     @IsEmail()
     email: string;

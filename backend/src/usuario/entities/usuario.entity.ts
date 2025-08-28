@@ -18,7 +18,7 @@ export class Usuario extends GenericTableAttributes {
     apellidoMaterno: string;
 
     @Column()
-    username: string;
+    usuario: string;
 
     @Column()
     email: string;
@@ -38,7 +38,6 @@ export class Usuario extends GenericTableAttributes {
 
     
   @BeforeInsert()
-  @BeforeUpdate()
   async hashPassword() {
     if (this.password && this.password.trim() !== '' && this.password.length >= 8) {
       const salt = await bcrypt.genSalt(10);

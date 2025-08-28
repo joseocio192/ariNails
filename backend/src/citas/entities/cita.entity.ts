@@ -6,13 +6,13 @@ import { GenericTableAttributes } from "src/utils/generic/genericTableAtributes.
 @Entity()
 export class Cita extends GenericTableAttributes {
     @Column({ type: 'time', nullable: true })
-    startTime: string;
+    horaInicio: string;
 
     @Column({ type: 'time', nullable: true })
-    endTimeExpected: string;
+    horaFinEsperada: string;
 
     @Column({ type: 'time', nullable: true })
-    endTime: string;
+    horaFin: string;
 
     @Column()
     fecha: Date;
@@ -33,10 +33,10 @@ export class Cita extends GenericTableAttributes {
     precioFinal: number;
 
     @Column({ default: false })
-    canceled: boolean;
+    cancelada: boolean;
 
     @Column({ nullable: true })
-    cancellationReason: string;
+    motivoCancelacion: string;
 
     @ManyToOne(() => Cliente, (cliente) => cliente.citas, { nullable: false })
     cliente: Cliente;

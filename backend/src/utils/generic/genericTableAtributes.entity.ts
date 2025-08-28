@@ -5,11 +5,11 @@ export class GenericTableAttributes {
     id: number;
 
     @CreateDateColumn()
-    created_at: Date;
+    fechaCreacion: Date;
     
     @UpdateDateColumn()
-    updated_at: Date;
+    fechaActualizacion: Date;
 
     @Column({ default: true })
-    esta_activo: boolean;
+    estaActivo: boolean;
 }
