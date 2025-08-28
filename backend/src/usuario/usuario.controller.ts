@@ -9,6 +9,7 @@ export class UsuarioController {
 
   @Post('/cliente')
   async create(@Body() createUsuarioDto: CreateUsuarioDto) {
-    return IResponse(await this.usuarioService.registerUsuarioCliente(createUsuarioDto), 'cliente registrado exitosamente', true);
+    const usuario = await this.usuarioService.registerUsuarioCliente(createUsuarioDto);
+    return IResponse(usuario, 'cliente registrado exitosamente', true);
   }
 }

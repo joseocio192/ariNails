@@ -14,7 +14,8 @@ export class AppController {
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
   async login(@Request() req) {
-    return IResponse(this.authService.login(req.user),'Registrado exitosamente',true);
+    const token = await this.authService.login(req.user);
+    return IResponse(token, 'Registrado exitosamente', true);
   }
 
   @UseGuards(JwtAuthGuard)
