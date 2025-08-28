@@ -1,28 +1,57 @@
-
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UsuarioService } from 'src/usuario/usuario.service';
 import { JwtService } from '@nestjs/jwt';
+import { Usuario } from 'src/usuario/entities/usuario.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usuarioService: UsuarioService,
-    private jwtService: JwtService
+    private readonly usersService: UsuarioService,
+    private jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, pass: string): Promise<any> {
-    const user = await this.usuarioService.findOneWithUsername(username);
-    if (user && user.password === pass) {
-      const { password, ...result } = user;
-      return result;
+    try {
+      let user: Usuario;
+      if (username.includes('@')) {
+        user = await this.usersService.findOneWithEmail(username);
+      } else {
+        user = await this.usersService.findOneWithUsername(
+          username.trim().toLowerCase(),
+        );
+      }
+      if (user && (await user.validatePassword(pass))) {
+        const { password, ...result } = user;
+        return result;
+      }
+      return null;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('User not found');
+      }
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to validate user');
     }
-    return null;
   }
 
   async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    try {
+      const payload = { username: user.username, userId: user.id };
+      const accessToken = this.jwtService.sign(payload);
+      return accessToken;
+    } catch (error) {
+      throw new Error('Failed to login');
+    }
   }
 }

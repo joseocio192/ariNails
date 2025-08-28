@@ -1,9 +1,13 @@
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
-import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Or, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsuarioService {
@@ -12,31 +16,43 @@ export class UsuarioService {
     private readonly usuarioRepository: Repository<Usuario>,
   ) {}
 
-  async registerUsuario(createUsuarioDto: CreateUsuarioDto) {
+  /**
+   * Register a new usuario
+   * @param createUsuarioDto - The data transfer object containing usuario details
+   * @returns The newly created usuario
+   */
+  async registerUsuario(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
     try {
       const existingUsuario = await this.usuarioRepository.findOne({
         where: [
           { email: createUsuarioDto.email },
-          { username: createUsuarioDto.username }
+          { username: createUsuarioDto.username },
         ],
       });
       if (existingUsuario) {
         throw new ConflictException('Usuario already exists');
       }
-      const usuario = this.usuarioRepository.create(createUsuarioDto);
-      return await this.usuarioRepository.save(usuario);
+      let usuario = this.usuarioRepository.create(createUsuarioDto);
+      await usuario.hashPassword();
+      usuario = await this.usuarioRepository.save(usuario);
+      return usuario;
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
       }
-      throw new InternalServerErrorException('Error creating usuario', error.message);
+      throw new InternalServerErrorException(
+        'Error creating usuario',
+        error.message,
+      );
     }
   }
 
-  findAll() {
-    return `This action returns all usuario`;
-  }
 
+  /**
+   * Find a usuario by ID
+   * @param id - The ID of the usuario to find
+   * @returns The found usuario
+   */
   async findOne(id: number): Promise<Usuario> {
     try {
       const usuario = await this.usuarioRepository.findOne({
@@ -54,28 +70,52 @@ export class UsuarioService {
     }
   }
 
+
+  /**
+   * Find a usuario by username
+   * @param username - The username of the usuario to find
+   * @returns The found usuario
+   */
   async findOneWithUsername(username: string): Promise<Usuario> {
     try {
       const usuario = await this.usuarioRepository.findOne({
         where: { username },
       });
       if (!usuario) {
-        throw new NotFoundException(`Usuario with username ${username} not found`);
+        throw new NotFoundException(
+          `Usuario with username ${username} not found`,
+        );
       }
       return usuario;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new NotFoundException(`Usuario with username ${username} not found`);
+      throw new NotFoundException(
+        `Usuario with username ${username} not found`,
+      );
     }
   }
 
-  update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
-    return `This action updates a #${id} usuario`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} usuario`;
+  /**
+   * Find a usuario by email
+   * @param email - The email of the usuario to find
+   * @returns The found usuario
+   */
+  async findOneWithEmail(email: string): Promise<Usuario> {
+    try {
+      const usuario = await this.usuarioRepository.findOne({
+        where: { email },
+      });
+      if (!usuario) {
+        throw new NotFoundException(`Usuario with email ${email} not found`);
+      }
+      return usuario;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException(`Usuario with email ${email} not found`);
+    }
   }
 }
