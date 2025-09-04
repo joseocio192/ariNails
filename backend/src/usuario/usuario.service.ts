@@ -34,6 +34,9 @@ export class UsuarioService {
       }
       const usuarioSanitizado = {
         ...createUsuarioDto,
+        usuarioIdCreacion: 1,
+        usuarioIdActualizacion: 1,
+        estaActivo: true,
         rol: { id: 1 },
       }
       let usuario = this.usuarioRepository.create(usuarioSanitizado);
