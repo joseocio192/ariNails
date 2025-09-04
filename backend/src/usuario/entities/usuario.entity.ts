@@ -1,4 +1,4 @@
-import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Rol } from "./rol.entityt";
 import { Cliente } from "src/clientes/entities/cliente.entity";
 import { Empleado } from "src/empleados/entities/empleado.entity";
@@ -8,26 +8,30 @@ import { BadRequestException } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 @Entity()
 export class Usuario extends GenericTableAttributes {
-    @Column()
+    @Column({nullable: false, comment: 'Nombres del usuario'})
     nombres: string;
 
-    @Column()
+    @Column({nullable: false, comment: 'Apellido paterno del usuario'})
     apellidoPaterno: string;
 
-    @Column()
+    @Column({nullable: false, comment: 'Apellido materno del usuario'})
     apellidoMaterno: string;
 
-    @Column()
+    @Column({nullable: false, comment: 'Nombre de usuario'})
     usuario: string;
 
-    @Column()
+    @Column({nullable: false, comment: 'Email del usuario'})
     email: string;
 
-    @Column()
+    @Column({nullable: false, comment: 'Contraseña del usuario'})
     @Exclude({ toPlainOnly: true })
     password: string;
 
+    @Column({nullable: false, comment: 'Rol del usuario'})
+    rol_id: number;
+
     @ManyToOne(() => Rol, rol => rol.usuarios, { nullable: false })
+    @JoinColumn({ name: 'rol_id' })
     rol: Rol;
 
     @OneToMany(() => Cliente, cliente => cliente.usuario)
