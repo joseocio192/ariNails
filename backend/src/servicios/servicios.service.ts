@@ -1,26 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { CreateServicioDto } from './dto/create-servicio.dto';
-import { UpdateServicioDto } from './dto/update-servicio.dto';
-
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Servicio } from './entities/servicio.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 @Injectable()
 export class ServiciosService {
-  create(createServicioDto: CreateServicioDto) {
-    return 'This action adds a new servicio';
-  }
+  constructor(
+    @InjectRepository(Servicio)
+    private readonly servicioRepository: Repository<Servicio>,
+  ) { }
 
-  findAll() {
-    return `This action returns all servicios`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} servicio`;
-  }
-
-  update(id: number, updateServicioDto: UpdateServicioDto) {
-    return `This action updates a #${id} servicio`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} servicio`;
+  async findAll() {
+    try {
+      return await this.servicioRepository.find();
+    } catch (error) {
+      throw new InternalServerErrorException('Error al obtener los servicios: ' + error.message);
+    }
   }
 }

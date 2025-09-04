@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateUsuarioDto } from './dto/create-usuario.dto';
+import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -118,6 +118,23 @@ export class UsuarioService {
         throw error;
       }
       throw new NotFoundException(`Usuario with email ${email} not found`);
+    }
+  }
+
+  async updateUsuarioCliente(updateUsuarioDto: UpdateUsuarioDto): Promise<Usuario> {
+    try {
+      const usuario = await this.usuarioRepository.findOneByOrFail({
+        id: updateUsuarioDto.id,
+      });
+
+      const updatedUsuario = Object.assign(usuario, updateUsuarioDto);
+      await this.usuarioRepository.save(updatedUsuario);
+      return this.usuarioRepository.findOneByOrFail({ id: updatedUsuario.id });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new NotFoundException(`Usuario with ID ${updateUsuarioDto.id} not found`);
     }
   }
 }

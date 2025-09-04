@@ -8,6 +8,7 @@ import { ServiciosModule } from './servicios/servicios.module';
 import { ClientesModule } from './clientes/clientes.module';
 import { EmpleadosModule } from './empleados/empleados.module';
 import { CitasModule } from './citas/citas.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [UsuarioModule,
@@ -26,6 +27,7 @@ import { CitasModule } from './citas/citas.module';
      ClientesModule,
      EmpleadosModule,
      CitasModule,
+     StripeModule.forRootAsync(),
   ],
   controllers: [AppController],
   providers: [AppService],

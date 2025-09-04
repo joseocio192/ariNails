@@ -1,26 +1,43 @@
-import { Injectable } from '@nestjs/common';
-import { CreateEmpleadoDto } from './dto/create-empleado.dto';
-import { UpdateEmpleadoDto } from './dto/update-empleado.dto';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Empleado } from './entities/empleado.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class EmpleadosService {
-  create(createEmpleadoDto: CreateEmpleadoDto) {
-    return 'This action adds a new empleado';
-  }
+  constructor(
+    @InjectRepository(Empleado)
+    private readonly empleadosRepository: Repository<Empleado>,
+  ) { }
 
-  findAll() {
-    return `This action returns all empleados`;
-  }
+  async find(employeeId: number | undefined, employeeName: string | undefined): Promise<Empleado | Empleado[]> {
+    try {
+      if (employeeId) {
+        const empleado = await this.empleadosRepository.findOneBy({ id: employeeId });
+        if (!empleado) {
+          throw new NotFoundException('Empleado no encontrado');
+        }
+        return empleado;
+      }
 
-  findOne(id: number) {
-    return `This action returns a #${id} empleado`;
-  }
-
-  update(id: number, updateEmpleadoDto: UpdateEmpleadoDto) {
-    return `This action updates a #${id} empleado`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} empleado`;
+      if (employeeName) {
+        const empleados = await this.empleadosRepository
+          .createQueryBuilder('empleado')
+          .where('empleado.nombre LIKE :name', { name: `%${employeeName}%` })
+          .getMany();
+        if (empleados.length === 0) {
+          throw new NotFoundException('No se encontraron empleados con ese nombre');
+        }
+        return empleados;
+      }
+      const empleados = await this.empleadosRepository.find();
+      return empleados;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('Empleado no encontrado');
+      }
+      console.error('Error fetching empleados:', error);
+      throw new InternalServerErrorException('No se pudieron obtener los empleados');
+    }
   }
 }

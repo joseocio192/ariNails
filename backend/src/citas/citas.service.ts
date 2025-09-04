@@ -1,26 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCitaDto } from './dto/create-cita.dto';
-import { UpdateCitaDto } from './dto/update-cita.dto';
-
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Cita } from './entities/cita.entity';
+import { Repository } from 'typeorm';
 @Injectable()
 export class CitasService {
-  create(createCitaDto: CreateCitaDto) {
-    return 'This action adds a new cita';
-  }
+  constructor(
+    @InjectRepository(Cita)
+    private readonly citasRepository: Repository<Cita>
+  ) { }
+  async obtenerCitasDisponibles(month: string, year: string, empleadoid?: number) {
+    try {
+      const query = this.citasRepository.createQueryBuilder('cita')
+        .select('cita.fecha, cita.horaInicio, cita.horaFinEsperada')
+        .where('EXTRACT(MONTH FROM cita.fecha) = :month', { month })
+        .andWhere('EXTRACT(YEAR FROM cita.fecha) = :year', { year })
+        .andWhere('cita.estaActivo = :estaActivo', { estaActivo: true });
 
-  findAll() {
-    return `This action returns all citas`;
-  }
+      if (empleadoid) {
+        query.andWhere('cita.empleadoId = :empleadoid', { empleadoid });
+      }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cita`;
-  }
-
-  update(id: number, updateCitaDto: UpdateCitaDto) {
-    return `This action updates a #${id} cita`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} cita`;
+      return await query.getMany();
+    } catch (error) {
+      throw new InternalServerErrorException('Error al obtener las citas disponibles: ' + error.message);
+    }
   }
 }
