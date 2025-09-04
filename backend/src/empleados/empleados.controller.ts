@@ -1,5 +1,6 @@
 import { Controller, Get, Query} from '@nestjs/common';
 import { EmpleadosService } from './empleados.service';
+const IResponse = require('./utils/IResponse.handle');
 
 @Controller('empleados')
 export class EmpleadosController {
@@ -7,6 +8,7 @@ export class EmpleadosController {
 
   @Get()
   async find(@Query('employeeId') employeeId?: number, @Query('employeeName') employeeName?: string) {
-    return this.empleadosService.find(employeeId, employeeName);
+    const data = await this.empleadosService.find(employeeId, employeeName);
+    return IResponse(data, 'Empleados obtenidos exitosamente', true);
   }
 }
