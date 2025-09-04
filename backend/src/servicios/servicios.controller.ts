@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ServiciosService } from './servicios.service';
 import { ApiTags } from '@nestjs/swagger';
-const IResponse = require('./utils/IResponse.handle');
+const IResponse = require('../utils/IResponse.handle');
 
 @Controller('servicios')
 @ApiTags('servicios')

@@ -1,6 +1,6 @@
 import { Controller, Get, Query} from '@nestjs/common';
 import { EmpleadosService } from './empleados.service';
-const IResponse = require('./utils/IResponse.handle');
+const IResponse = require('../utils/IResponse.handle');
 
 @Controller('empleados')
 export class EmpleadosController {

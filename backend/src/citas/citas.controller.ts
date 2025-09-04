@@ -1,7 +1,7 @@
 import { Controller, Get, Query} from '@nestjs/common';
 import { CitasService } from './citas.service';
 import { ApiTags } from '@nestjs/swagger';
-const IResponse = require('./utils/IResponse.handle');
+const IResponse = require('../utils/IResponse.handle');
 
 @ApiTags('citas')
 @Controller('citas')
