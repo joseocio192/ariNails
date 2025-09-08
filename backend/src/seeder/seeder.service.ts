@@ -291,6 +291,10 @@ export class SeederService implements OnModuleInit {
     
     // LIMPIAR HORARIOS EXISTENTES PARA EVITAR DUPLICADOS
     console.log('🧹 Limpiando horarios existentes...');
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('⚠️ Operación peligrosa bloqueada: No se permite limpiar horarios en producción.');
+      throw new Error('No se permite limpiar horarios en producción.');
+    }
     await this.horarioRepository.clear(); // Usar clear() en lugar de delete({})
     console.log('✅ Horarios existentes eliminados');
 
