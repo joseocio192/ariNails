@@ -93,8 +93,9 @@ const MisCitas: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
       
+      const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
       const response = await fetch(
-        `http://localhost:3000/citas/cancelar/${citaId}`,
+        `${API_BASE_URL}/citas/cancelar/${citaId}`,
         {
           method: 'PUT',
           headers: {
