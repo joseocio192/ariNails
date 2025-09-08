@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { AuthService } from '../auth/auth.service';
 import { ApiTags } from '@nestjs/swagger';
-const IResponse = require('./utils/IResponse.handle');
+const IResponse = require('../utils/IResponse.handle');
 
 @ApiTags('auth')
 @Controller()
@@ -15,7 +15,8 @@ export class AuthController {
   @Post('auth/login')
   async login(@Request() req) {
     const token = await this.authService.login(req.user);
-    return IResponse(token, 'Registrado exitosamente', true);
+    console.log('🔑 Login successful, token generated:', token.substring(0, 20) + '...');
+    return IResponse(token, 'Login exitoso', true);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -24,9 +25,9 @@ export class AuthController {
     return IResponse(req.user, 'Perfil obtenido exitosamente', true);
   }
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Post('auth/logout')
-  async logout(@Request() req) {
-    return IResponse(req.logout(), 'Cierre de sesión exitoso', true);
+  async logout(@Request() _req) {
+    return IResponse({}, 'Cierre de sesión exitoso', true);
   }
 }

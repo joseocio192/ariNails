@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
+import { Rol } from './entities/rol.entityt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -14,7 +15,36 @@ export class UsuarioService {
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
+    @InjectRepository(Rol)
+    private readonly rolRepository: Repository<Rol>,
   ) {}
+
+  /**
+   * Ensure default roles exist in the database
+   */
+  private async ensureDefaultRoles(): Promise<void> {
+    const roles = [
+      { nombre: 'cliente', descripcion: 'Usuario cliente' },
+      { nombre: 'empleado', descripcion: 'Usuario empleado' },
+      { nombre: 'admin', descripcion: 'Usuario administrador' },
+    ];
+
+    for (const roleData of roles) {
+      const existingRole = await this.rolRepository.findOne({
+        where: { nombre: roleData.nombre },
+      });
+      
+      if (!existingRole) {
+        const newRole = this.rolRepository.create({
+          ...roleData,
+          usuarioIdCreacion: 1,
+          usuarioIdActualizacion: 1,
+          estaActivo: true,
+        });
+        await this.rolRepository.save(newRole);
+      }
+    }
+  }
 
   /**
    * Register a new usuario
@@ -23,6 +53,9 @@ export class UsuarioService {
    */
   async registerUsuarioCliente(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
     try {
+      // Ensure default roles exist
+      await this.ensureDefaultRoles();
+      
       const existingUsuario = await this.usuarioRepository.findOne({
         where: [
           { email: createUsuarioDto.email },
@@ -32,12 +65,22 @@ export class UsuarioService {
       if (existingUsuario) {
         throw new ConflictException('Usuario already exists');
       }
+
+      // Find the cliente role
+      const clienteRole = await this.rolRepository.findOne({
+        where: { nombre: 'cliente' },
+      });
+
+      if (!clienteRole) {
+        throw new InternalServerErrorException('Default cliente role not found');
+      }
+
       const usuarioSanitizado = {
         ...createUsuarioDto,
         usuarioIdCreacion: 1,
         usuarioIdActualizacion: 1,
         estaActivo: true,
-        rol: { id: 1 },
+        rol_id: clienteRole.id,
       }
       let usuario = this.usuarioRepository.create(usuarioSanitizado);
       await this.usuarioRepository.save(usuario);

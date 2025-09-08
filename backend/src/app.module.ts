@@ -9,10 +9,16 @@ import { ClientesModule } from './clientes/clientes.module';
 import { EmpleadosModule } from './empleados/empleados.module';
 import { CitasModule } from './citas/citas.module';
 import { StripeModule } from './stripe/stripe.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [UsuarioModule,
-     TypeOrmModule.forRoot({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    UsuarioModule,
+    TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT ?? '5432', 10),
@@ -22,12 +28,12 @@ import { StripeModule } from './stripe/stripe.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-     AuthModule,
-     ServiciosModule,
-     ClientesModule,
-     EmpleadosModule,
-     CitasModule,
-     StripeModule.forRootAsync(),
+    AuthModule,
+    ServiciosModule,
+    ClientesModule,
+    EmpleadosModule,
+    CitasModule,
+    StripeModule.forRootAsync(),
   ],
   controllers: [AppController],
   providers: [AppService],
