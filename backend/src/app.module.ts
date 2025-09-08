@@ -9,6 +9,8 @@ import { ClientesModule } from './clientes/clientes.module';
 import { EmpleadosModule } from './empleados/empleados.module';
 import { CitasModule } from './citas/citas.module';
 import { StripeModule } from './stripe/stripe.module';
+import { HorariosModule } from './horarios/horarios.module';
+import { SeederModule } from './seeder/seeder.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -33,6 +35,8 @@ import { ConfigModule } from '@nestjs/config';
     ClientesModule,
     EmpleadosModule,
     CitasModule,
+    HorariosModule,
+    SeederModule,
     StripeModule.forRootAsync(),
   ],
   controllers: [AppController],

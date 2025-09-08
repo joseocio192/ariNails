@@ -27,8 +27,28 @@ const LoginPage: React.FC = () => {
     loginMutation.mutate(
       { username, password },
       {
-        onSuccess: () => {
-          navigate('/profile');
+        onSuccess: (response) => {
+          // Verificar si tenemos información del rol para redirigir adecuadamente
+          if (response?.data) {
+            // Decodificar el JWT para obtener información del usuario
+            try {
+              const payload = JSON.parse(atob(response.data.split('.')[1]));
+              
+              // Redirigir según el rol
+              if (payload.rolNombre === 'empleado') {
+                navigate('/empleado-dashboard');
+              } else if (payload.rolNombre === 'admin') {
+                navigate('/profile'); // O crear un dashboard admin específico
+              } else {
+                navigate('/profile'); // Clientes van al perfil normal
+              }
+            } catch (error) {
+              console.error('Error al decodificar token:', error);
+              navigate('/profile'); // Fallback
+            }
+          } else {
+            navigate('/profile'); // Fallback
+          }
         },
       }
     );

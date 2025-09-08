@@ -7,6 +7,7 @@ import {
 import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
 import { Rol } from './entities/rol.entityt';
+import { Cliente } from '../clientes/entities/cliente.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -17,6 +18,8 @@ export class UsuarioService {
     private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(Rol)
     private readonly rolRepository: Repository<Rol>,
+    @InjectRepository(Cliente)
+    private readonly clienteRepository: Repository<Cliente>,
   ) {}
 
   /**
@@ -84,7 +87,22 @@ export class UsuarioService {
       }
       let usuario = this.usuarioRepository.create(usuarioSanitizado);
       await this.usuarioRepository.save(usuario);
-      const usuarioRegistrado = await this.usuarioRepository.findOneOrFail({ where: { id: usuario.id } });
+      
+      // Crear automáticamente el registro de Cliente
+      const cliente = this.clienteRepository.create({
+        telefono: '', // Campo por defecto, se puede actualizar después
+        direccion: '', // Campo por defecto, se puede actualizar después
+        usuario: usuario,
+        usuarioIdCreacion: 1,
+        usuarioIdActualizacion: 1,
+        estaActivo: true,
+      });
+      await this.clienteRepository.save(cliente);
+      
+      const usuarioRegistrado = await this.usuarioRepository.findOneOrFail({ 
+        where: { id: usuario.id },
+        relations: ['clientes'] 
+      });
       return usuarioRegistrado;
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -128,7 +146,7 @@ export class UsuarioService {
     try {
       const usuario = await this.usuarioRepository.findOne({
         where: { usuario: username },
-        relations: ['rol'], // Incluir la relación del rol
+        relations: ['rol', 'clientes', 'empleados'], // Incluir todas las relaciones necesarias
       });
       if (!usuario) {
         throw new NotFoundException(
@@ -155,7 +173,7 @@ export class UsuarioService {
     try {
       const usuario = await this.usuarioRepository.findOne({
         where: { email },
-        relations: ['rol'], // Incluir la relación del rol
+        relations: ['rol', 'clientes', 'empleados'], // Incluir todas las relaciones necesarias
       });
       if (!usuario) {
         throw new NotFoundException(`Usuario with email ${email} not found`);

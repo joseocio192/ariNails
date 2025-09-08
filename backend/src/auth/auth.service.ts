@@ -47,6 +47,10 @@ export class AuthService {
 
   async login(user: any) {
     try {
+      // Obtener información del cliente si existe
+      const clienteId = user.clientes && user.clientes.length > 0 ? user.clientes[0].id : null;
+      const empleadoId = user.empleados && user.empleados.length > 0 ? user.empleados[0].id : null;
+
       const payload = { 
         username: user.usuario, 
         sub: user.id,
@@ -56,7 +60,9 @@ export class AuthService {
         apellidoMaterno: user.apellidoMaterno,
         rolId: user.rol_id,
         rolNombre: user.rol?.nombre,
-        rolDescripcion: user.rol?.descripcion
+        rolDescripcion: user.rol?.descripcion,
+        clienteId: clienteId,
+        empleadoId: empleadoId
       };
       const accessToken = this.jwtService.sign(payload);
       return accessToken;

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import MisCitas from './pages/MisCitas';
+import EmpleadoDashboard from './pages/EmpleadoDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App: React.FC = () => {
@@ -16,6 +18,22 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/mis-citas" 
+          element={
+            <ProtectedRoute>
+              <MisCitas />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/empleado-dashboard" 
+          element={
+            <ProtectedRoute>
+              <EmpleadoDashboard />
             </ProtectedRoute>
           } 
         />
