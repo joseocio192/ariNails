@@ -128,6 +128,7 @@ export class UsuarioService {
     try {
       const usuario = await this.usuarioRepository.findOne({
         where: { usuario: username },
+        relations: ['rol'], // Incluir la relación del rol
       });
       if (!usuario) {
         throw new NotFoundException(
@@ -154,6 +155,7 @@ export class UsuarioService {
     try {
       const usuario = await this.usuarioRepository.findOne({
         where: { email },
+        relations: ['rol'], // Incluir la relación del rol
       });
       if (!usuario) {
         throw new NotFoundException(`Usuario with email ${email} not found`);

@@ -50,6 +50,9 @@ export interface User {
   nombres: string;
   apellidoPaterno: string;
   apellidoMaterno: string;
+  rolId: number;
+  rolNombre: string;
+  rolDescripcion: string;
 }
 
 export const authService = {

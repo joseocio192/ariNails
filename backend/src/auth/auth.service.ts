@@ -53,7 +53,10 @@ export class AuthService {
         email: user.email,
         nombres: user.nombres,
         apellidoPaterno: user.apellidoPaterno,
-        apellidoMaterno: user.apellidoMaterno
+        apellidoMaterno: user.apellidoMaterno,
+        rolId: user.rol_id,
+        rolNombre: user.rol?.nombre,
+        rolDescripcion: user.rol?.descripcion
       };
       const accessToken = this.jwtService.sign(payload);
       return accessToken;

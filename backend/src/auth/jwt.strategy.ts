@@ -21,7 +21,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: payload.email,
       nombres: payload.nombres,
       apellidoPaterno: payload.apellidoPaterno,
-      apellidoMaterno: payload.apellidoMaterno
+      apellidoMaterno: payload.apellidoMaterno,
+      rolId: payload.rolId,
+      rolNombre: payload.rolNombre,
+      rolDescripcion: payload.rolDescripcion
     };
   }
 }
