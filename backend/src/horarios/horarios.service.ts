@@ -286,7 +286,7 @@ export class HorariosService {
 
     if (horariosConflictivos.length > 0) {
       throw new BadRequestException(
-        `Ya existe un horario en conflicto. El empleado ya tiene horarios asignados que se solapan con el horario solicitado (${horaInicio} - ${horaFin}).`
+        'Schedule conflict: The requested time slot overlaps with existing schedules.'
       );
     }
 
