@@ -36,7 +36,7 @@ export class UsuarioService {
       const existingRole = await this.rolRepository.findOne({
         where: { nombre: roleData.nombre },
       });
-      
+
       if (!existingRole) {
         const newRole = this.rolRepository.create({
           ...roleData,
@@ -54,11 +54,13 @@ export class UsuarioService {
    * @param createUsuarioDto - The data transfer object containing usuario details
    * @returns The newly created usuario
    */
-  async registerUsuarioCliente(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
+  async registerUsuarioCliente(
+    createUsuarioDto: CreateUsuarioDto,
+  ): Promise<Usuario> {
     try {
       // Ensure default roles exist
       await this.ensureDefaultRoles();
-      
+
       const existingUsuario = await this.usuarioRepository.findOne({
         where: [
           { email: createUsuarioDto.email },
@@ -75,7 +77,9 @@ export class UsuarioService {
       });
 
       if (!clienteRole) {
-        throw new InternalServerErrorException('Default cliente role not found');
+        throw new InternalServerErrorException(
+          'Default cliente role not found',
+        );
       }
 
       const usuarioSanitizado = {
@@ -84,10 +88,10 @@ export class UsuarioService {
         usuarioIdActualizacion: 1,
         estaActivo: true,
         rol_id: clienteRole.id,
-      }
-      let usuario = this.usuarioRepository.create(usuarioSanitizado);
+      };
+      const usuario = this.usuarioRepository.create(usuarioSanitizado);
       await this.usuarioRepository.save(usuario);
-      
+
       // Crear automáticamente el registro de Cliente
       const cliente = this.clienteRepository.create({
         telefono: '', // Campo por defecto, se puede actualizar después
@@ -98,10 +102,10 @@ export class UsuarioService {
         estaActivo: true,
       });
       await this.clienteRepository.save(cliente);
-      
-      const usuarioRegistrado = await this.usuarioRepository.findOneOrFail({ 
+
+      const usuarioRegistrado = await this.usuarioRepository.findOneOrFail({
         where: { id: usuario.id },
-        relations: ['clientes'] 
+        relations: ['clientes'],
       });
       return usuarioRegistrado;
     } catch (error) {
@@ -187,7 +191,9 @@ export class UsuarioService {
     }
   }
 
-  async updateUsuarioCliente(updateUsuarioDto: UpdateUsuarioDto): Promise<Usuario> {
+  async updateUsuarioCliente(
+    updateUsuarioDto: UpdateUsuarioDto,
+  ): Promise<Usuario> {
     try {
       const usuario = await this.usuarioRepository.findOneByOrFail({
         id: updateUsuarioDto.id,
@@ -200,7 +206,9 @@ export class UsuarioService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new NotFoundException(`Usuario with ID ${updateUsuarioDto.id} not found`);
+      throw new NotFoundException(
+        `Usuario with ID ${updateUsuarioDto.id} not found`,
+      );
     }
   }
 }

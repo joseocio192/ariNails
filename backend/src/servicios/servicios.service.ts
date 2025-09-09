@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Servicio } from './entities/servicio.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,13 +14,15 @@ export class ServiciosService {
   constructor(
     @InjectRepository(Servicio)
     private readonly servicioRepository: Repository<Servicio>,
-  ) { }
+  ) {}
 
   async findAll() {
     try {
       return await this.servicioRepository.find();
     } catch (error) {
-      throw new InternalServerErrorException('Error al obtener los servicios: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al obtener los servicios: ' + error.message,
+      );
     }
   }
 
@@ -31,7 +37,9 @@ export class ServiciosService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException('Error al obtener el servicio: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al obtener el servicio: ' + error.message,
+      );
     }
   }
 
@@ -44,26 +52,30 @@ export class ServiciosService {
       });
       return await this.servicioRepository.save(nuevoServicio);
     } catch (error) {
-      throw new InternalServerErrorException('Error al crear el servicio: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al crear el servicio: ' + error.message,
+      );
     }
   }
 
   async update(id: number, updateServicioDto: UpdateServicioDto) {
     try {
       await this.findOne(id); // Verificar que existe
-      
+
       await this.servicioRepository.update(id, {
         ...updateServicioDto,
         usuarioIdActualizacion: 1, // Por defecto usuario admin - idealmente esto vendría del JWT
         fechaActualizacion: new Date(),
       });
-      
+
       return await this.findOne(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException('Error al actualizar el servicio: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al actualizar el servicio: ' + error.message,
+      );
     }
   }
 
@@ -76,7 +88,9 @@ export class ServiciosService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException('Error al eliminar el servicio: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al eliminar el servicio: ' + error.message,
+      );
     }
   }
 }

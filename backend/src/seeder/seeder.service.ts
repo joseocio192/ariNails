@@ -39,7 +39,7 @@ export class SeederService implements OnModuleInit {
 
   async crearRolesBasicos() {
     console.log('🔑 Verificando y creando roles básicos...');
-    
+
     // Verificar si los roles ya existen
     const rolesExistentes = await this.rolRepository.count();
     if (rolesExistentes > 0) {
@@ -68,7 +68,7 @@ export class SeederService implements OnModuleInit {
         usuarioIdCreacion: 1,
         usuarioIdActualizacion: 1,
         estaActivo: true,
-      }
+      },
     ];
 
     for (const rolData of roles) {
@@ -83,17 +83,20 @@ export class SeederService implements OnModuleInit {
         await this.rolRepository.save(nuevoRol);
         console.log(`✅ Rol '${rolData.nombre}' creado exitosamente`);
       } catch (error) {
-        console.error(`❌ Error al crear rol '${rolData.nombre}':`, error.message);
+        console.error(
+          `❌ Error al crear rol '${rolData.nombre}':`,
+          error.message,
+        );
       }
     }
   }
 
   async crearUsuarioAdmin() {
     console.log('👑 Verificando usuario administrador...');
-    
+
     // Verificar si ya existe un usuario admin
     const adminExistente = await this.usuarioRepository.findOne({
-      where: { email: 'admin@arinails.com' }
+      where: { email: 'admin@arinails.com' },
     });
 
     if (adminExistente) {
@@ -102,7 +105,9 @@ export class SeederService implements OnModuleInit {
     }
 
     // Obtener el rol de admin
-    const rolAdmin = await this.rolRepository.findOne({ where: { nombre: 'admin' } });
+    const rolAdmin = await this.rolRepository.findOne({
+      where: { nombre: 'admin' },
+    });
     if (!rolAdmin) {
       console.error('❌ Rol admin no encontrado');
       return;
@@ -132,18 +137,20 @@ export class SeederService implements OnModuleInit {
 
   async crearEmpleadosFicticios() {
     console.log('👥 Verificando y creando empleados ficticios...');
-    
+
     // Contar empleados existentes
     const empleadosExistentes = await this.empleadoRepository.count();
     console.log(`Empleados existentes encontrados: ${empleadosExistentes}`);
-    
+
     if (empleadosExistentes >= 3) {
       console.log('Ya existen suficientes empleados, saltando creación...');
       return;
     }
 
     // Obtener el rol de empleado
-    const rolEmpleado = await this.rolRepository.findOne({ where: { nombre: 'empleado' } });
+    const rolEmpleado = await this.rolRepository.findOne({
+      where: { nombre: 'empleado' },
+    });
     if (!rolEmpleado) {
       console.error('❌ Rol empleado no encontrado');
       return;
@@ -207,17 +214,21 @@ export class SeederService implements OnModuleInit {
     let empleadosCreados = 0;
     for (const empleadoData of empleadosFicticios) {
       try {
-        console.log(`Intentando crear empleado: ${empleadoData.usuario.nombres} ${empleadoData.usuario.apellidoPaterno}`);
-        
+        console.log(
+          `Intentando crear empleado: ${empleadoData.usuario.nombres} ${empleadoData.usuario.apellidoPaterno}`,
+        );
+
         // Verificar si el usuario ya existe
         const usuarioExistente = await this.usuarioRepository.findOne({
           where: { email: empleadoData.usuario.email },
-          relations: ['empleados']
+          relations: ['empleados'],
         });
 
         if (!usuarioExistente) {
-          console.log(`Usuario no existe, creando: ${empleadoData.usuario.email}`);
-          
+          console.log(
+            `Usuario no existe, creando: ${empleadoData.usuario.email}`,
+          );
+
           // Crear usuario (la contraseña se hasheará automáticamente)
           const nuevoUsuario = this.usuarioRepository.create({
             nombres: empleadoData.usuario.nombres,
@@ -232,7 +243,8 @@ export class SeederService implements OnModuleInit {
             estaActivo: true,
           });
 
-          const usuarioGuardado = await this.usuarioRepository.save(nuevoUsuario);
+          const usuarioGuardado =
+            await this.usuarioRepository.save(nuevoUsuario);
           console.log(`✅ Usuario creado con ID: ${usuarioGuardado.id}`);
 
           // Crear empleado
@@ -248,18 +260,22 @@ export class SeederService implements OnModuleInit {
           await this.empleadoRepository.save(nuevoEmpleado);
           empleadosCreados++;
 
-          console.log(`✅ Empleado ${empleadoData.usuario.nombres} ${empleadoData.usuario.apellidoPaterno} creado exitosamente`);
+          console.log(
+            `✅ Empleado ${empleadoData.usuario.nombres} ${empleadoData.usuario.apellidoPaterno} creado exitosamente`,
+          );
         } else {
           console.log(`Usuario ya existe: ${empleadoData.usuario.email}`);
-          
+
           // Verificar si el empleado existe para este usuario
           const empleadoExistente = await this.empleadoRepository.findOne({
-            where: { usuario: { id: usuarioExistente.id } }
+            where: { usuario: { id: usuarioExistente.id } },
           });
 
           if (!empleadoExistente) {
-            console.log(`⚠️ Usuario existe pero NO tiene registro de empleado. Creando empleado...`);
-            
+            console.log(
+              `⚠️ Usuario existe pero NO tiene registro de empleado. Creando empleado...`,
+            );
+
             // Crear empleado para el usuario existente
             const nuevoEmpleado = this.empleadoRepository.create({
               telefono: empleadoData.telefono,
@@ -273,26 +289,37 @@ export class SeederService implements OnModuleInit {
             await this.empleadoRepository.save(nuevoEmpleado);
             empleadosCreados++;
 
-            console.log(`✅ Empleado ${empleadoData.usuario.nombres} ${empleadoData.usuario.apellidoPaterno} creado para usuario existente`);
+            console.log(
+              `✅ Empleado ${empleadoData.usuario.nombres} ${empleadoData.usuario.apellidoPaterno} creado para usuario existente`,
+            );
           } else {
-            console.log(`✅ Empleado ya existe para: ${empleadoData.usuario.email}`);
+            console.log(
+              `✅ Empleado ya existe para: ${empleadoData.usuario.email}`,
+            );
           }
         }
       } catch (error) {
-        console.error(`❌ Error al crear empleado ${empleadoData.usuario.nombres}:`, error.message);
+        console.error(
+          `❌ Error al crear empleado ${empleadoData.usuario.nombres}:`,
+          error.message,
+        );
       }
     }
 
-    console.log(`✅ Proceso de creación de empleados completado. Empleados creados: ${empleadosCreados}`);
+    console.log(
+      `✅ Proceso de creación de empleados completado. Empleados creados: ${empleadosCreados}`,
+    );
   }
 
   async crearHorariosIniciales() {
     console.log('⏰ Verificando y creando horarios iniciales...');
-    
+
     // LIMPIAR HORARIOS EXISTENTES PARA EVITAR DUPLICADOS
     console.log('🧹 Limpiando horarios existentes...');
     if (process.env.NODE_ENV === 'production') {
-      console.warn('⚠️ Operación peligrosa bloqueada: No se permite limpiar horarios en producción.');
+      console.warn(
+        '⚠️ Operación peligrosa bloqueada: No se permite limpiar horarios en producción.',
+      );
       throw new Error('No se permite limpiar horarios en producción.');
     }
     await this.horarioRepository.clear(); // Usar clear() en lugar de delete({})
@@ -301,7 +328,7 @@ export class SeederService implements OnModuleInit {
     // Obtener todos los empleados activos
     const empleados = await this.empleadoRepository.find({
       where: { estaActivo: true },
-      relations: ['usuario']
+      relations: ['usuario'],
     });
 
     if (empleados.length === 0) {
@@ -309,35 +336,55 @@ export class SeederService implements OnModuleInit {
       return;
     }
 
-    console.log(`Creando horarios personalizados para ${empleados.length} empleados...`);
+    console.log(
+      `Creando horarios personalizados para ${empleados.length} empleados...`,
+    );
 
     // Definir diferentes esquemas de horarios para empleados
     const esquemasHorarios = [
       {
         nombre: 'Turno Mañana',
         horas: ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00'],
-        dias: [1, 2, 3, 4, 5] // Lunes a viernes
+        dias: [1, 2, 3, 4, 5], // Lunes a viernes
       },
       {
         nombre: 'Turno Tarde',
         horas: ['14:00', '15:00', '16:00', '17:00', '18:00', '19:00'],
-        dias: [1, 2, 3, 4, 5] // Lunes a viernes
+        dias: [1, 2, 3, 4, 5], // Lunes a viernes
       },
       {
         nombre: 'Turno Completo',
-        horas: ['09:00', '10:00', '11:00', '12:00', '15:00', '16:00', '17:00', '18:00'],
-        dias: [1, 2, 3, 4, 5] // Lunes a viernes
+        horas: [
+          '09:00',
+          '10:00',
+          '11:00',
+          '12:00',
+          '15:00',
+          '16:00',
+          '17:00',
+          '18:00',
+        ],
+        dias: [1, 2, 3, 4, 5], // Lunes a viernes
       },
       {
         nombre: 'Turno Fin de Semana',
         horas: ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
-        dias: [6, 0] // Sábado y domingo
+        dias: [6, 0], // Sábado y domingo
       },
       {
         nombre: 'Turno Mixto',
-        horas: ['08:00', '09:00', '10:00', '11:00', '16:00', '17:00', '18:00', '19:00'],
-        dias: [1, 3, 5] // Lunes, miércoles, viernes
-      }
+        horas: [
+          '08:00',
+          '09:00',
+          '10:00',
+          '11:00',
+          '16:00',
+          '17:00',
+          '18:00',
+          '19:00',
+        ],
+        dias: [1, 3, 5], // Lunes, miércoles, viernes
+      },
     ];
 
     // Crear horarios para hoy y los próximos 14 días
@@ -349,21 +396,23 @@ export class SeederService implements OnModuleInit {
     }
 
     let horariosCreados = 0;
-    
+
     // Asignar un esquema diferente a cada empleado
     for (let i = 0; i < empleados.length; i++) {
       const empleado = empleados[i];
       const esquema = esquemasHorarios[i % esquemasHorarios.length];
-      
-      console.log(`Creando horarios "${esquema.nombre}" para ${empleado.usuario?.nombres} ${empleado.usuario?.apellidoPaterno}...`);
-      
+
+      console.log(
+        `Creando horarios "${esquema.nombre}" para ${empleado.usuario?.nombres} ${empleado.usuario?.apellidoPaterno}...`,
+      );
+
       for (const fechaBase of fechasBase) {
         const diaSemana = fechaBase.getDay();
-        
+
         // Verificar si el empleado trabaja este día según su esquema
         if (esquema.dias.includes(diaSemana)) {
           const fechaStr = fechaBase.toISOString().split('T')[0];
-          
+
           try {
             for (const hora of esquema.horas) {
               const horaInicio = new Date(`${fechaStr}T${hora}:00`);
@@ -382,27 +431,36 @@ export class SeederService implements OnModuleInit {
               await this.horarioRepository.save(horario);
               horariosCreados++;
             }
-            
-            console.log(`✅ Horarios ${esquema.nombre} creados para ${empleado.usuario?.nombres || 'Empleado'} el ${fechaStr}`);
+
+            console.log(
+              `✅ Horarios ${esquema.nombre} creados para ${empleado.usuario?.nombres || 'Empleado'} el ${fechaStr}`,
+            );
           } catch (error) {
-            console.error(`❌ Error al crear horarios para empleado ${empleado.id}:`, error.message);
+            console.error(
+              `❌ Error al crear horarios para empleado ${empleado.id}:`,
+              error.message,
+            );
           }
         }
       }
     }
 
-    console.log(`✅ Proceso de creación de horarios completado. Horarios creados: ${horariosCreados}`);
+    console.log(
+      `✅ Proceso de creación de horarios completado. Horarios creados: ${horariosCreados}`,
+    );
     console.log('📅 Resumen de horarios asignados:');
     for (let i = 0; i < empleados.length; i++) {
       const empleado = empleados[i];
       const esquema = esquemasHorarios[i % esquemasHorarios.length];
-      console.log(`   ${empleado.usuario?.nombres} ${empleado.usuario?.apellidoPaterno}: ${esquema.nombre}`);
+      console.log(
+        `   ${empleado.usuario?.nombres} ${empleado.usuario?.apellidoPaterno}: ${esquema.nombre}`,
+      );
     }
   }
 
   async crearClientesDePrueba() {
     console.log('👤 Verificando y creando clientes de prueba...');
-    
+
     // Verificar si ya existen clientes
     const clientesExistentes = await this.clienteRepository.count();
     if (clientesExistentes > 0) {
@@ -411,7 +469,9 @@ export class SeederService implements OnModuleInit {
     }
 
     // Obtener el rol de cliente
-    const rolCliente = await this.rolRepository.findOne({ where: { nombre: 'cliente' } });
+    const rolCliente = await this.rolRepository.findOne({
+      where: { nombre: 'cliente' },
+    });
     if (!rolCliente) {
       console.error('❌ Rol cliente no encontrado');
       return;
@@ -433,7 +493,7 @@ export class SeederService implements OnModuleInit {
         apellidoPaterno: 'López',
         apellidoMaterno: 'Silva',
         usuario: 'carmen.lopez',
-        email: 'carmen.lopez@cliente.com', 
+        email: 'carmen.lopez@cliente.com',
         password: 'cliente123',
         telefono: '555-1002',
         direccion: 'Av. Sol 456, Ciudad',
@@ -469,16 +529,21 @@ export class SeederService implements OnModuleInit {
         });
 
         await this.clienteRepository.save(nuevoCliente);
-        console.log(`✅ Cliente ${clienteData.nombres} ${clienteData.apellidoPaterno} creado exitosamente`);
+        console.log(
+          `✅ Cliente ${clienteData.nombres} ${clienteData.apellidoPaterno} creado exitosamente`,
+        );
       } catch (error) {
-        console.error(`❌ Error al crear cliente ${clienteData.nombres}:`, error.message);
+        console.error(
+          `❌ Error al crear cliente ${clienteData.nombres}:`,
+          error.message,
+        );
       }
     }
   }
 
   async crearCitasDePrueba() {
     console.log('📅 Verificando y creando citas de prueba...');
-    
+
     // Verificar si ya existen citas
     const citasExistentes = await this.citaRepository.count();
     if (citasExistentes > 0) {
@@ -489,7 +554,7 @@ export class SeederService implements OnModuleInit {
     // Obtener Ana Martínez (empleado)
     const anaMartinez = await this.empleadoRepository.findOne({
       where: { usuario: { email: 'ana.martinez@arinails.com' } },
-      relations: ['usuario']
+      relations: ['usuario'],
     });
 
     if (!anaMartinez) {
@@ -500,7 +565,7 @@ export class SeederService implements OnModuleInit {
     // Obtener clientes de prueba
     const clientes = await this.clienteRepository.find({
       relations: ['usuario'],
-      take: 2
+      take: 2,
     });
 
     if (clientes.length === 0) {
@@ -518,20 +583,20 @@ export class SeederService implements OnModuleInit {
         empleado: anaMartinez,
         fecha: fechaHoy,
         hora: '10:00',
-        precio: 50.00,
-        precioFull: 50.00,
+        precio: 50.0,
+        precioFull: 50.0,
         descuento: 0,
-        precioFinal: 50.00,
+        precioFinal: 50.0,
       },
       {
         cliente: clientes[1] || clientes[0],
         empleado: anaMartinez,
         fecha: fechaManana,
         hora: '14:30',
-        precio: 75.00,
-        precioFull: 75.00,
+        precio: 75.0,
+        precioFull: 75.0,
         descuento: 0,
-        precioFinal: 75.00,
+        precioFinal: 75.0,
       },
     ];
 
@@ -554,7 +619,9 @@ export class SeederService implements OnModuleInit {
         });
 
         await this.citaRepository.save(nuevaCita);
-        console.log(`✅ Cita creada para ${citaData.cliente.usuario?.nombres} con Ana Martínez el ${citaData.fecha.toDateString()} a las ${citaData.hora}`);
+        console.log(
+          `✅ Cita creada para ${citaData.cliente.usuario?.nombres} con Ana Martínez el ${citaData.fecha.toDateString()} a las ${citaData.hora}`,
+        );
       } catch (error) {
         console.error(`❌ Error al crear cita:`, error.message);
       }

@@ -18,7 +18,9 @@ async function bootstrap() {
   });
   const config = new DocumentBuilder()
     .setTitle('AriNails API')
-    .setDescription('API completa para la gestión de citas, empleados, clientes y servicios de AriNails')
+    .setDescription(
+      'API completa para la gestión de citas, empleados, clientes y servicios de AriNails',
+    )
     .setVersion('1.0')
     .addTag('citas', 'Gestión de citas y reservas')
     .addTag('Horarios', 'Gestión de horarios y disponibilidad')

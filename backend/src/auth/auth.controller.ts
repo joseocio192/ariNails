@@ -1,10 +1,15 @@
-
 import { Controller, Get, Request, Post, UseGuards } from '@nestjs/common';
 import { GetUser } from '../utils/get-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { AuthService } from '../auth/auth.service';
-import { ApiBearerAuth, ApiBody, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 const IResponse = require('../utils/IResponse.handle');
 
@@ -12,7 +17,7 @@ const IResponse = require('../utils/IResponse.handle');
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  
+
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
   @ApiBearerAuth()
@@ -22,7 +27,10 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   async login(@GetUser() user) {
     const token = await this.authService.login(user);
-    console.log('🔑 Login successful, token generated:', token.substring(0, 20) + '...');
+    console.log(
+      '🔑 Login successful, token generated:',
+      token.substring(0, 20) + '...',
+    );
     return IResponse(token, 'Login exitoso', true);
   }
 

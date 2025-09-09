@@ -2,25 +2,25 @@ import { IsString, IsNumber, IsNotEmpty, IsPositive } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateServicioDto {
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Nombre del servicio',
-    example: 'Manicure Clásico'
+    example: 'Manicure Clásico',
   })
   @IsString()
   @IsNotEmpty()
   nombre: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Descripción del servicio',
-    example: 'Manicure tradicional con corte, limado y esmaltado'
+    example: 'Manicure tradicional con corte, limado y esmaltado',
   })
   @IsString()
   @IsNotEmpty()
   descripcion: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: 'Precio del servicio',
-    example: 25.99
+    example: 25.99,
   })
   @IsNumber()
   @IsPositive()
