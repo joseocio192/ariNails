@@ -21,6 +21,7 @@ import {
   ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../hooks/useAuth';
 
 interface CitaCliente {
@@ -65,7 +66,7 @@ const MisCitas: React.FC = () => {
       const token = localStorage.getItem('token');
       
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(
+      const response = await axios.get(
         `${API_BASE_URL}/citas/cliente/${clienteId}`,
         {
           headers: {
@@ -74,15 +75,10 @@ const MisCitas: React.FC = () => {
         }
       );
 
-      if (response.ok) {
-        const data = await response.json();
-        setCitas(data.data.map((c: any) => ({
-          ...c,
-          fecha: new Date(c.fecha),
-        })));
-      } else {
-        throw new Error('Error al cargar citas');
-      }
+      setCitas(response.data.data.map((c: any) => ({
+        ...c,
+        fecha: new Date(c.fecha),
+      })));
     } catch (error) {
       setError('Error al cargar las citas');
     }
@@ -94,27 +90,25 @@ const MisCitas: React.FC = () => {
       const token = localStorage.getItem('token');
       
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(
+      await axios.put(
         `${API_BASE_URL}/citas/cancelar/${citaId}`,
+        { motivo: 'Cancelada por el cliente' },
         {
-          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ motivo: 'Cancelada por el cliente' }),
         }
       );
 
-      if (response.ok) {
-        setSuccess('Cita cancelada exitosamente');
-        cargarCitas();
+      setSuccess('Cita cancelada exitosamente');
+      cargarCitas();
+    } catch (error: any) {
+      if (error.response) {
+        setError(error.response.data.message || 'Error al cancelar la cita');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Error al cancelar la cita');
+        setError('Error al cancelar la cita');
       }
-    } catch (error) {
-      setError('Error al cancelar la cita');
     }
   };
 

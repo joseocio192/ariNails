@@ -23,6 +23,7 @@ import {
   Stack,
   Snackbar,
 } from '@mui/material';
+import axios from 'axios';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -123,7 +124,7 @@ const EmpleadoDashboard: React.FC = () => {
   const cargarHorarios = async () => {
     const token = localStorage.getItem('token');
     
-    const response = await fetch(
+    const response = await axios.get(
       `http://localhost:3000/horarios/empleado/${empleadoId}/detallado?fecha=${selectedDate}`,
       {
         headers: {
@@ -132,21 +133,16 @@ const EmpleadoDashboard: React.FC = () => {
       }
     );
 
-    if (response.ok) {
-      const data = await response.json();
-      setHorarios(data.data.map((h: any) => ({
-        ...h,
-        fecha: new Date(h.fecha),
-      })));
-    } else {
-      throw new Error('Error al cargar horarios');
-    }
+    setHorarios(response.data.data.map((h: any) => ({
+      ...h,
+      fecha: new Date(h.fecha),
+    })));
   };
 
   const cargarCitas = async () => {
     const token = localStorage.getItem('token');
     
-    const response = await fetch(
+    const response = await axios.get(
       `http://localhost:3000/citas/empleado/${empleadoId}?fecha=${selectedDate}`,
       {
         headers: {
@@ -155,15 +151,10 @@ const EmpleadoDashboard: React.FC = () => {
       }
     );
 
-    if (response.ok) {
-      const data = await response.json();
-      setCitas(data.data.map((c: any) => ({
-        ...c,
-        fecha: new Date(c.fecha),
-      })));
-    } else {
-      throw new Error('Error al cargar citas');
-    }
+    setCitas(response.data.data.map((c: any) => ({
+      ...c,
+      fecha: new Date(c.fecha),
+    })));
   };
 
   const crearHorario = async () => {
@@ -184,18 +175,18 @@ const EmpleadoDashboard: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/horarios/empleado/crear`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(horarioDto),
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/horarios/empleado/crear`,
+        horarioDto,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      const data = await response.json();
-
-      if (response.ok && data.isValid) {
+      if (response.data.isValid) {
         // Éxito: cerrar modal y mostrar toast
         setOpenDialog(false);
         limpiarModal();
@@ -203,7 +194,7 @@ const EmpleadoDashboard: React.FC = () => {
         cargarDatos();
       } else {
         // Error: mostrar en modal y toast
-        let errorMessage = data.message || data.error || 'Error al crear horario';
+        let errorMessage = response.data.message || response.data.error || 'Error al crear horario';
         
         // Limpiar el mensaje si tiene prefijo redundante
         if (errorMessage.startsWith('Error al crear horario: ')) {
@@ -213,8 +204,19 @@ const EmpleadoDashboard: React.FC = () => {
         setModalError(errorMessage);
         showErrorToast(errorMessage);
       }
-    } catch (error) {
-      const errorMessage = 'Error de conexión al crear horario';
+    } catch (error: any) {
+      let errorMessage = 'Error de conexión al crear horario';
+      
+      if (error.response) {
+        const data = error.response.data;
+        errorMessage = data.message || data.error || 'Error al crear horario';
+        
+        // Limpiar el mensaje si tiene prefijo redundante
+        if (errorMessage.startsWith('Error al crear horario: ')) {
+          errorMessage = errorMessage.replace('Error al crear horario: ', '');
+        }
+      }
+      
       setModalError(errorMessage);
       showErrorToast(errorMessage);
     }
@@ -224,25 +226,23 @@ const EmpleadoDashboard: React.FC = () => {
     const token = localStorage.getItem('token');
     
     try {
-      const response = await fetch(
+      await axios.delete(
         `http://localhost:3000/horarios/empleado/${empleadoId}/horario/${horarioId}`,
         {
-          method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      if (response.ok) {
-        showSuccessToast('Horario eliminado exitosamente');
-        cargarDatos();
+      showSuccessToast('Horario eliminado exitosamente');
+      cargarDatos();
+    } catch (error: any) {
+      if (error.response) {
+        showErrorToast(error.response.data.message || 'Error al eliminar horario');
       } else {
-        const errorData = await response.json();
-        showErrorToast(errorData.message || 'Error al eliminar horario');
+        showErrorToast('Error al eliminar horario');
       }
-    } catch (error) {
-      showErrorToast('Error al eliminar horario');
     }
   };
 

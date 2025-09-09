@@ -13,6 +13,7 @@ import {
   Avatar,
 } from '@mui/material';
 import { Close, Person } from '@mui/icons-material';
+import axios from 'axios';
 import { horarioService, type HorarioDisponible } from '../services/horarioService';
 import { useAuth } from '../hooks/useAuth';
 
@@ -111,27 +112,24 @@ const CitaModal: React.FC<CitaModalProps> = ({ open, onClose, onCitaCreada }) =>
       };
 
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await fetch(`${apiUrl}/citas/crear`, {
-        method: 'POST',
+      const response = await axios.post(`${apiUrl}/citas/crear`, citaDto, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(citaDto),
       });
 
-      if (response.ok) {
-        setSuccess('¡Cita agendada exitosamente!');
-        setTimeout(() => {
-          onCitaCreada?.();
-          handleClose();
-        }, 2000);
+      setSuccess('¡Cita agendada exitosamente!');
+      setTimeout(() => {
+        onCitaCreada?.();
+        handleClose();
+      }, 2000);
+    } catch (error: any) {
+      if (error.response) {
+        setError(error.response.data.message || 'Error al crear la cita');
       } else {
-        const errorData = await response.json();
-        setError(errorData.message || 'Error al crear la cita');
+        setError('Error al crear la cita');
       }
-    } catch (error) {
-      setError('Error al crear la cita');
     } finally {
       setCreatingCita(false);
     }
