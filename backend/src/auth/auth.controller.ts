@@ -4,7 +4,7 @@ import { GetUser } from '../utils/get-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { AuthService } from '../auth/auth.service';
-import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { LoginDto } from './dto/login.dto';
 const IResponse = require('../utils/IResponse.handle');
 
@@ -16,6 +16,9 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
   @ApiBearerAuth()
+  @ApiOperation({ summary: 'Iniciar sesión en el sistema' })
+  @ApiResponse({ status: 200, description: 'Login exitoso' })
+  @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
   @ApiBody({ type: LoginDto })
   async login(@GetUser() user) {
     const token = await this.authService.login(user);
@@ -26,6 +29,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('profile')
+  @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
+  @ApiResponse({ status: 200, description: 'Perfil obtenido exitosamente' })
+  @ApiResponse({ status: 401, description: 'Token inválido o expirado' })
   getProfile(@Request() req) {
     return IResponse(req.user, 'Perfil obtenido exitosamente', true);
   }

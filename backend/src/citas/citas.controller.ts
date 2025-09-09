@@ -11,6 +11,11 @@ export class CitasController {
   constructor(private readonly citasService: CitasService) {}
 
   @Get('/disponibles')
+  @ApiOperation({ summary: 'Obtener citas disponibles por mes y año' })
+  @ApiQuery({ name: 'month', description: 'Mes en formato MM', example: '12' })
+  @ApiQuery({ name: 'year', description: 'Año en formato YYYY', example: '2024' })
+  @ApiQuery({ name: 'empleadoid', required: false, description: 'ID del empleado específico', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Citas disponibles obtenidas exitosamente' })
   async obtenerCitasDisponibles(@Query('month') month: string, @Query('year') year: string, @Query('empleadoid') empleadoid?: number) {
     const data = await this.citasService.obtenerCitasDisponibles(month, year, empleadoid);
     return IResponse(data, 'Citas disponibles obtenidas exitosamente', true);
@@ -30,6 +35,10 @@ export class CitasController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('/empleado/:empleadoId')
+  @ApiOperation({ summary: 'Obtener citas de un empleado específico' })
+  @ApiParam({ name: 'empleadoId', description: 'ID del empleado', type: 'number' })
+  @ApiQuery({ name: 'fecha', required: false, description: 'Fecha específica en formato YYYY-MM-DD', example: '2024-12-20' })
+  @ApiResponse({ status: 200, description: 'Citas del empleado obtenidas exitosamente' })
   async obtenerCitasEmpleado(
     @Param('empleadoId') empleadoId: number,
     @Query('fecha') fecha?: string

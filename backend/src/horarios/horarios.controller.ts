@@ -29,6 +29,9 @@ export class HorariosController {
   @ApiBearerAuth()
   @Get('activo/:fecha')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Verificar si un día está activo para citas' })
+  @ApiParam({ name: 'fecha', description: 'Fecha a verificar en formato YYYY-MM-DD', example: '2024-12-20' })
+  @ApiResponse({ status: 200, description: 'Verificación de día activo completada' })
   async verificarDiaActivo(@Param('fecha') fecha: string) {
     try {
       const activo = await this.horariosService.verificarDiaActivo(fecha);
