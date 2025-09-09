@@ -17,7 +17,7 @@ export class AuthController {
   @Post('auth/login')
   @ApiBearerAuth()
   @ApiBody({ type: LoginDto })
-  async login(@Request() req, @GetUser() user) {
+  async login(@GetUser() user) {
     const token = await this.authService.login(user);
     console.log('🔑 Login successful, token generated:', token.substring(0, 20) + '...');
     return IResponse(token, 'Login exitoso', true);

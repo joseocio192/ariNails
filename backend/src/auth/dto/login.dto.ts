@@ -5,5 +5,5 @@ export class LoginDto {
 	username: string;
 
 	@ApiProperty({ type: String, example: 'admin123456' })
-	pass: string;
+	password: string;
 }
