@@ -402,4 +402,116 @@ export class HorariosService {
       }
     }
   }
+
+  // Métodos específicos para administradores - gestión de calendario
+  async bloquearHorario(horarioId: number): Promise<Horario> {
+    try {
+      const horario = await this.horariosRepository.findOne({ where: { id: horarioId } });
+      if (!horario) {
+        throw new NotFoundException('Horario no encontrado');
+      }
+
+      horario.estaActivo = false;
+      horario.usuarioIdActualizacion = 1; // Idealmente vendría del JWT
+      horario.fechaActualizacion = new Date();
+
+      return await this.horariosRepository.save(horario);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Error al bloquear horario: ' + error.message);
+    }
+  }
+
+  async habilitarHorario(horarioId: number): Promise<Horario> {
+    try {
+      const horario = await this.horariosRepository.findOne({ where: { id: horarioId } });
+      if (!horario) {
+        throw new NotFoundException('Horario no encontrado');
+      }
+
+      horario.estaActivo = true;
+      horario.usuarioIdActualizacion = 1; // Idealmente vendría del JWT
+      horario.fechaActualizacion = new Date();
+
+      return await this.horariosRepository.save(horario);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Error al habilitar horario: ' + error.message);
+    }
+  }
+
+  async bloquearDiaCompleto(fecha: string, empleadoId?: number): Promise<void> {
+    try {
+      let query = this.horariosRepository.createQueryBuilder()
+        .update(Horario)
+        .set({ 
+          estaActivo: false,
+          usuarioIdActualizacion: 1,
+          fechaActualizacion: new Date()
+        })
+        .where('DATE(desde) = :fecha', { fecha });
+
+      if (empleadoId) {
+        query = query.andWhere('empleadoId = :empleadoId', { empleadoId });
+      }
+
+      await query.execute();
+    } catch (error) {
+      throw new BadRequestException('Error al bloquear día completo: ' + error.message);
+    }
+  }
+
+  async habilitarDiaCompleto(fecha: string, empleadoId?: number): Promise<void> {
+    try {
+      let query = this.horariosRepository.createQueryBuilder()
+        .update(Horario)
+        .set({ 
+          estaActivo: true,
+          usuarioIdActualizacion: 1,
+          fechaActualizacion: new Date()
+        })
+        .where('DATE(desde) = :fecha', { fecha });
+
+      if (empleadoId) {
+        query = query.andWhere('empleadoId = :empleadoId', { empleadoId });
+      }
+
+      await query.execute();
+    } catch (error) {
+      throw new BadRequestException('Error al habilitar día completo: ' + error.message);
+    }
+  }
+
+  async obtenerEstadoCalendario(fechaInicio: string, fechaFin: string): Promise<any[]> {
+    try {
+      const horarios = await this.horariosRepository
+        .createQueryBuilder('horario')
+        .leftJoinAndSelect('horario.empleado', 'empleado')
+        .leftJoinAndSelect('empleado.usuario', 'empleadoUsuario')
+        .leftJoin('empleado.citas', 'cita', 'DATE(cita.fecha) = DATE(horario.desde) AND cita.cancelada = false')
+        .where('DATE(horario.desde) BETWEEN :fechaInicio AND :fechaFin', { fechaInicio, fechaFin })
+        .orderBy('horario.desde', 'ASC')
+        .getMany();
+
+      return horarios.map(horario => ({
+        id: horario.id,
+        fecha: horario.desde.toISOString().split('T')[0],
+        horaInicio: horario.desde.toTimeString().split(' ')[0].substring(0, 5),
+        horaFin: horario.hasta.toTimeString().split(' ')[0].substring(0, 5),
+        empleado: {
+          id: horario.empleado.id,
+          nombres: horario.empleado.usuario.nombres,
+          apellidos: `${horario.empleado.usuario.apellidoPaterno} ${horario.empleado.usuario.apellidoMaterno}`,
+        },
+        activo: horario.estaActivo,
+        ocupado: false, // Se podría calcular si hay citas en ese horario
+      }));
+    } catch (error) {
+      throw new BadRequestException('Error al obtener estado del calendario: ' + error.message);
+    }
+  }
 }

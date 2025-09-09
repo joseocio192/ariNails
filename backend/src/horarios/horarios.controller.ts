@@ -111,4 +111,68 @@ export class HorariosController {
       return responseHandler({}, 'Error al crear horarios iniciales: ' + error.message, false);
     }
   }
+
+  // Endpoints específicos para administradores - gestión de calendario
+  @ApiBearerAuth()
+  @Post('admin/bloquear/:horarioId')
+  @UseGuards(JwtAuthGuard)
+  async bloquearHorario(@Param('horarioId') horarioId: number) {
+    try {
+      const horario = await this.horariosService.bloquearHorario(horarioId);
+      return responseHandler(horario, 'Horario bloqueado correctamente', true);
+    } catch (error) {
+      return responseHandler({}, 'Error al bloquear horario: ' + error.message, false);
+    }
+  }
+
+  @ApiBearerAuth()
+  @Post('admin/habilitar/:horarioId')
+  @UseGuards(JwtAuthGuard)
+  async habilitarHorario(@Param('horarioId') horarioId: number) {
+    try {
+      const horario = await this.horariosService.habilitarHorario(horarioId);
+      return responseHandler(horario, 'Horario habilitado correctamente', true);
+    } catch (error) {
+      return responseHandler({}, 'Error al habilitar horario: ' + error.message, false);
+    }
+  }
+
+  @ApiBearerAuth()
+  @Post('admin/bloquear-dia')
+  @UseGuards(JwtAuthGuard)
+  async bloquearDiaCompleto(@Body() body: { fecha: string; empleadoId?: number }) {
+    try {
+      await this.horariosService.bloquearDiaCompleto(body.fecha, body.empleadoId);
+      return responseHandler({}, 'Día bloqueado correctamente', true);
+    } catch (error) {
+      return responseHandler({}, 'Error al bloquear día: ' + error.message, false);
+    }
+  }
+
+  @ApiBearerAuth()
+  @Post('admin/habilitar-dia')
+  @UseGuards(JwtAuthGuard)
+  async habilitarDiaCompleto(@Body() body: { fecha: string; empleadoId?: number }) {
+    try {
+      await this.horariosService.habilitarDiaCompleto(body.fecha, body.empleadoId);
+      return responseHandler({}, 'Día habilitado correctamente', true);
+    } catch (error) {
+      return responseHandler({}, 'Error al habilitar día: ' + error.message, false);
+    }
+  }
+
+  @ApiBearerAuth()
+  @Get('admin/calendario')
+  @UseGuards(JwtAuthGuard)
+  async obtenerEstadoCalendario(
+    @Query('fechaInicio') fechaInicio: string,
+    @Query('fechaFin') fechaFin: string
+  ) {
+    try {
+      const calendario = await this.horariosService.obtenerEstadoCalendario(fechaInicio, fechaFin);
+      return responseHandler(calendario, 'Estado del calendario obtenido correctamente', true);
+    } catch (error) {
+      return responseHandler({}, 'Error al obtener estado del calendario: ' + error.message, false);
+    }
+  }
 }
