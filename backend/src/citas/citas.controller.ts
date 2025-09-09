@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Query, Param, Body, UseGuards, Delete } from '@nestjs/common';
 import { CitasService } from './citas.service';
 import type { CrearCitaDto } from './citas.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 const IResponse = require('../utils/IResponse.handle');
 
@@ -16,6 +16,7 @@ export class CitasController {
     return IResponse(data, 'Citas disponibles obtenidas exitosamente', true);
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()
   async crearCita(@Body() crearCitaDto: CrearCitaDto) {
@@ -23,6 +24,7 @@ export class CitasController {
     return IResponse(data, 'Cita creada exitosamente', true);
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('/empleado/:empleadoId')
   async obtenerCitasEmpleado(
@@ -33,13 +35,15 @@ export class CitasController {
     return IResponse(data, 'Citas del empleado obtenidas exitosamente', true);
   }
 
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('/cliente/:clienteId')
   async obtenerCitasCliente(@Param('clienteId') clienteId: number) {
     const data = await this.citasService.obtenerCitasCliente(clienteId);
     return IResponse(data, 'Citas del cliente obtenidas exitosamente', true);
   }
-
+  
+  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Delete('/:citaId')
   async cancelarCita(

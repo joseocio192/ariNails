@@ -2,9 +2,11 @@ import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@n
 import { HorariosService } from './horarios.service';
 import type { ConfiguracionHorario, CrearHorarioDto } from './horarios.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 const responseHandler = require('../utils/IResponse.handle');
 
+@ApiTags('Horarios')
 @Controller('horarios')
 export class HorariosController {
   constructor(private readonly horariosService: HorariosService) {}
@@ -20,6 +22,8 @@ export class HorariosController {
     }
   }
 
+
+  @ApiBearerAuth()
   @Get('activo/:fecha')
   @UseGuards(JwtAuthGuard)
   async verificarDiaActivo(@Param('fecha') fecha: string) {
@@ -31,6 +35,7 @@ export class HorariosController {
     }
   }
 
+  @ApiBearerAuth()
   @Post('configurar')
   @UseGuards(JwtAuthGuard)
   async configurarHorarios(@Body() configuraciones: ConfiguracionHorario[]) {
@@ -42,6 +47,7 @@ export class HorariosController {
     }
   }
 
+  @ApiBearerAuth()
   @Get('empleado/:empleadoId')
   @UseGuards(JwtAuthGuard)
   async obtenerHorariosEmpleado(@Param('empleadoId') empleadoId: number) {
@@ -53,6 +59,7 @@ export class HorariosController {
     }
   }
 
+  @ApiBearerAuth()
   @Get('empleado/:empleadoId/detallado')
   @UseGuards(JwtAuthGuard)
   async obtenerHorariosEmpleadoDetallado(
@@ -67,6 +74,7 @@ export class HorariosController {
     }
   }
 
+  @ApiBearerAuth()
   @Post('empleado/crear')
   @UseGuards(JwtAuthGuard)
   async crearHorarioEmpleado(@Body() crearHorarioDto: CrearHorarioDto) {
@@ -78,6 +86,7 @@ export class HorariosController {
     }
   }
 
+  @ApiBearerAuth()
   @Delete('empleado/:empleadoId/horario/:horarioId')
   @UseGuards(JwtAuthGuard)
   async eliminarHorarioEmpleado(
@@ -92,6 +101,7 @@ export class HorariosController {
     }
   }
 
+  @ApiBearerAuth()
   @Post('inicializar')
   async crearHorariosIniciales() {
     try {
