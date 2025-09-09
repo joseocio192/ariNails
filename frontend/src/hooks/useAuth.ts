@@ -51,10 +51,18 @@ export const useProfile = () => {
 // Hook para verificar si está autenticado
 export const useAuth = () => {
   const { data: profile, isLoading, error } = useProfile();
+  const queryClient = useQueryClient();
+  
+  const logout = () => {
+    localStorage.removeItem('token');
+    queryClient.clear();
+    window.location.href = '/login';
+  };
   
   return {
     user: profile?.data,
     isAuthenticated: !!profile?.data && !error,
     isLoading,
+    logout,
   };
 };

@@ -5,6 +5,7 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import MisCitas from './pages/MisCitas';
 import EmpleadoDashboard from './pages/EmpleadoDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const App: React.FC = () => {
@@ -34,6 +35,14 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <EmpleadoDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
             </ProtectedRoute>
           } 
         />

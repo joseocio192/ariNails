@@ -38,7 +38,7 @@ const LoginPage: React.FC = () => {
               if (payload.rolNombre === 'empleado') {
                 navigate('/empleado-dashboard');
               } else if (payload.rolNombre === 'admin') {
-                navigate('/profile'); // O crear un dashboard admin específico
+                navigate('/admin-dashboard');
               } else {
                 navigate('/profile'); // Clientes van al perfil normal
               }
