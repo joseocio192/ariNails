@@ -121,7 +121,7 @@ const AppointmentsManagement: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.data.exito) {
+      if (response.data.isValid) {
         let citasFiltradas = response.data.data;
         
         // Aplicar filtro de estado
@@ -150,7 +150,7 @@ const AppointmentsManagement: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      if (response.data.exito) {
+      if (response.data.isValid) {
         setEstadisticas(response.data.data);
       }
     } catch (error) {
@@ -293,7 +293,7 @@ const AppointmentsManagement: React.FC = () => {
                     Ingresos Totales
                   </Typography>
                   <Typography variant="h4" color="primary.main">
-                    ${estadisticas.ingresosTotales.toFixed(2)}
+                    ${estadisticas.ingresosTotales}
                   </Typography>
                 </CardContent>
               </Card>
@@ -396,7 +396,7 @@ const AppointmentsManagement: React.FC = () => {
                     {cita.servicios.map(servicio => servicio.nombre).join(', ') || 'Sin servicios'}
                   </TableCell>
                   <TableCell align="right">
-                    ${cita.precioFinal.toFixed(2)}
+                    ${cita.precioFinal}
                   </TableCell>
                   <TableCell align="center">
                     <Chip

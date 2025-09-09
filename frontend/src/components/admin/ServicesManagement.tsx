@@ -80,7 +80,7 @@ const ServicesManagement: React.FC = () => {
       
       console.log('Servicios response:', response.data);
       
-      if (response.data.exito) {
+      if (response.data.isValid) {
         setServicios(response.data.data || []);
       } else {
         console.error('Error en respuesta:', response.data.mensaje);
@@ -271,7 +271,7 @@ const ServicesManagement: React.FC = () => {
                 <TableCell>{servicio.id}</TableCell>
                 <TableCell>{servicio.nombre}</TableCell>
                 <TableCell>{servicio.descripcion}</TableCell>
-                <TableCell align="right">${servicio.precio.toFixed(2)}</TableCell>
+                <TableCell align="right">${servicio.precio}</TableCell>
                 <TableCell align="center">
                   <Chip 
                     label={servicio.estaActivo ? 'Activo' : 'Inactivo'}

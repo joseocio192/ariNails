@@ -87,7 +87,7 @@ const CalendarManagement: React.FC = () => {
         }
       );
 
-      if (response.data.exito) {
+      if (response.data.isValid) {
         let horariosData = response.data.data;
         
         // Filtrar por empleado si está seleccionado

@@ -72,7 +72,7 @@ const AdminStatistics: React.FC<{ onTabChange?: (tabIndex: number) => void }> = 
         timeout: 5000
       });
 
-      if (response.data.exito) {
+      if (response.data.isValid) {
         setEstadisticasCitas(response.data.data);
         setUltimaActualizacion(new Date());
       }
@@ -112,7 +112,7 @@ const AdminStatistics: React.FC<{ onTabChange?: (tabIndex: number) => void }> = 
     },
     {
       titulo: 'Ingresos Totales',
-      valor: `$${estadisticasCitas.ingresosTotales.toFixed(2)}`,
+      valor: `$${estadisticasCitas.ingresosTotales}`,
       icono: <MoneyIcon sx={{ fontSize: 40 }} />,
       color: '#ed6c02'
     },
@@ -243,7 +243,7 @@ const AdminStatistics: React.FC<{ onTabChange?: (tabIndex: number) => void }> = 
                   </ListItemIcon>
                   <ListItemText
                     primary="Promedio Diario Estimado"
-                    secondary={`$${calcularPromedioDiario().toFixed(2)}`}
+                    secondary={`$${calcularPromedioDiario()}`}
                   />
                 </ListItem>
                 
