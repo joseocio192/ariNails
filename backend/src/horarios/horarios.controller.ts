@@ -1,8 +1,8 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
 import { HorariosService } from './horarios.service';
-import type { ConfiguracionHorario, CrearHorarioDto } from './horarios.service';
+import { ConfiguracionHorarioDto, CrearHorarioDto, BloquearDiaDto, HabilitarDiaDto } from './dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 
 const responseHandler = require('../utils/IResponse.handle');
 
@@ -13,6 +13,9 @@ export class HorariosController {
 
   @Get('disponibles/:fecha')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Obtener horarios disponibles para una fecha específica' })
+  @ApiParam({ name: 'fecha', description: 'Fecha en formato YYYY-MM-DD', example: '2024-12-20' })
+  @ApiResponse({ status: 200, description: 'Horarios disponibles obtenidos correctamente' })
   async obtenerHorariosDisponibles(@Param('fecha') fecha: string) {
     try {
       const horarios = await this.horariosService.obtenerHorariosDisponibles(fecha);
@@ -38,7 +41,10 @@ export class HorariosController {
   @ApiBearerAuth()
   @Post('configurar')
   @UseGuards(JwtAuthGuard)
-  async configurarHorarios(@Body() configuraciones: ConfiguracionHorario[]) {
+  @ApiOperation({ summary: 'Configurar horarios de empleado' })
+  @ApiResponse({ status: 200, description: 'Horarios configurados correctamente' })
+  @ApiBody({ type: [ConfiguracionHorarioDto] })
+  async configurarHorarios(@Body() configuraciones: ConfiguracionHorarioDto[]) {
     try {
       await this.horariosService.configurarHorarioEmpleado(configuraciones);
       return responseHandler({}, 'Horarios configurados correctamente', true);
@@ -50,6 +56,9 @@ export class HorariosController {
   @ApiBearerAuth()
   @Get('empleado/:empleadoId')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Obtener horarios de un empleado específico' })
+  @ApiParam({ name: 'empleadoId', description: 'ID del empleado', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Horarios del empleado obtenidos correctamente' })
   async obtenerHorariosEmpleado(@Param('empleadoId') empleadoId: number) {
     try {
       const horarios = await this.horariosService.obtenerHorariosEmpleado(empleadoId);
@@ -77,6 +86,9 @@ export class HorariosController {
   @ApiBearerAuth()
   @Post('empleado/crear')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Crear un nuevo horario para empleado' })
+  @ApiResponse({ status: 201, description: 'Horario creado correctamente' })
+  @ApiBody({ type: CrearHorarioDto })
   async crearHorarioEmpleado(@Body() crearHorarioDto: CrearHorarioDto) {
     try {
       const horario = await this.horariosService.crearHorarioEmpleado(crearHorarioDto);
@@ -140,7 +152,10 @@ export class HorariosController {
   @ApiBearerAuth()
   @Post('admin/bloquear-dia')
   @UseGuards(JwtAuthGuard)
-  async bloquearDiaCompleto(@Body() body: { fecha: string; empleadoId?: number }) {
+  @ApiOperation({ summary: 'Bloquear un día completo (administrador)' })
+  @ApiResponse({ status: 200, description: 'Día bloqueado correctamente' })
+  @ApiBody({ type: BloquearDiaDto })
+  async bloquearDiaCompleto(@Body() body: BloquearDiaDto) {
     try {
       await this.horariosService.bloquearDiaCompleto(body.fecha, body.empleadoId);
       return responseHandler({}, 'Día bloqueado correctamente', true);
@@ -152,7 +167,10 @@ export class HorariosController {
   @ApiBearerAuth()
   @Post('admin/habilitar-dia')
   @UseGuards(JwtAuthGuard)
-  async habilitarDiaCompleto(@Body() body: { fecha: string; empleadoId?: number }) {
+  @ApiOperation({ summary: 'Habilitar un día completo (administrador)' })
+  @ApiResponse({ status: 200, description: 'Día habilitado correctamente' })
+  @ApiBody({ type: HabilitarDiaDto })
+  async habilitarDiaCompleto(@Body() body: HabilitarDiaDto) {
     try {
       await this.horariosService.habilitarDiaCompleto(body.fecha, body.empleadoId);
       return responseHandler({}, 'Día habilitado correctamente', true);

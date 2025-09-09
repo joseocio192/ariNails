@@ -17,10 +17,16 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
   const config = new DocumentBuilder()
-    .setTitle('Citas API')
-    .setDescription('The Citas API description')
+    .setTitle('AriNails API')
+    .setDescription('API completa para la gestión de citas, empleados, clientes y servicios de AriNails')
     .setVersion('1.0')
-    .addTag('citas')
+    .addTag('citas', 'Gestión de citas y reservas')
+    .addTag('Horarios', 'Gestión de horarios y disponibilidad')
+    .addTag('servicios', 'Gestión de servicios ofrecidos')
+    .addTag('empleados', 'Gestión de empleados')
+    .addTag('clientes', 'Gestión de clientes')
+    .addTag('auth', 'Autenticación y autorización')
+    .addTag('usuarios', 'Gestión de usuarios del sistema')
     .addBearerAuth()
     .build();
   const httpAdapter = app.getHttpAdapter();

@@ -4,42 +4,12 @@ import { Repository, Between } from 'typeorm';
 import { Horario } from '../empleados/entities/horario.entity';
 import { Empleado } from '../empleados/entities/empleado.entity';
 import { Cita } from '../citas/entities/cita.entity';
-
-export interface HorarioDisponible {
-  hora: string;
-  empleado: {
-    id: number;
-    nombre: string;
-    apellidos: string;
-  };
-}
-
-export interface ConfiguracionHorario {
-  empleadoId: number;
-  diaSemana: number; // 0=domingo, 1=lunes, ..., 6=sábado
-  horaInicio: string; // formato HH:mm
-  horaFin: string;
-}
-
-export interface CrearHorarioDto {
-  empleadoId: number;
-  fecha: string; // YYYY-MM-DD
-  horaInicio: string; // HH:mm
-  horaFin: string; // HH:mm
-}
-
-export interface HorarioEmpleadoVista {
-  id: number;
-  fecha: Date;
-  horaInicio: string;
-  horaFin: string;
-  disponible: boolean; // true si no hay cita asignada
-  cita?: {
-    id: number;
-    cliente: string;
-    telefono: string;
-  };
-}
+import { 
+  HorarioDisponibleDto, 
+  ConfiguracionHorarioDto, 
+  CrearHorarioDto, 
+  HorarioEmpleadoVistaDto 
+} from './dto';
 
 @Injectable()
 export class HorariosService {
@@ -52,7 +22,7 @@ export class HorariosService {
     private citasRepository: Repository<Cita>,
   ) {}
 
-  async obtenerHorariosDisponibles(fecha: string): Promise<HorarioDisponible[]> {
+  async obtenerHorariosDisponibles(fecha: string): Promise<HorarioDisponibleDto[]> {
     const fechaObj = new Date(fecha + 'T00:00:00');
     const diaSemana = fechaObj.getDay();
     
@@ -62,7 +32,7 @@ export class HorariosService {
       relations: ['usuario', 'horarios'],
     });
 
-    const horariosDisponibles: HorarioDisponible[] = [];
+    const horariosDisponibles: HorarioDisponibleDto[] = [];
     
     // Usar un Set para evitar duplicados del mismo empleado en la misma hora
     const combinacionesUnicas = new Set<string>();
@@ -134,7 +104,7 @@ export class HorariosService {
     return empleadosConHorarios > 0;
   }
 
-  async configurarHorarioEmpleado(configuraciones: ConfiguracionHorario[]): Promise<void> {
+  async configurarHorarioEmpleado(configuraciones: ConfiguracionHorarioDto[]): Promise<void> {
     for (const config of configuraciones) {
       const empleado = await this.empleadosRepository.findOne({
         where: { id: config.empleadoId },
@@ -184,7 +154,7 @@ export class HorariosService {
     });
   }
 
-  async obtenerHorariosEmpleadoDetallado(empleadoId: number, fecha?: string): Promise<HorarioEmpleadoVista[]> {
+  async obtenerHorariosEmpleadoDetallado(empleadoId: number, fecha?: string): Promise<HorarioEmpleadoVistaDto[]> {
     const query = this.horariosRepository.createQueryBuilder('horario')
       .leftJoinAndSelect('horario.empleado', 'empleado')
       .where('horario.empleado.id = :empleadoId', { empleadoId })
@@ -201,7 +171,7 @@ export class HorariosService {
     }
 
     const horarios = await query.orderBy('horario.desde', 'ASC').getMany();
-    const resultado: HorarioEmpleadoVista[] = [];
+    const resultado: HorarioEmpleadoVistaDto[] = [];
 
     // Usar un Set para evitar duplicados
     const horariosUnicos = new Set<string>();
@@ -233,7 +203,7 @@ export class HorariosService {
         relations: ['cliente', 'cliente.usuario'],
       });
 
-      const horarioVista: HorarioEmpleadoVista = {
+      const horarioVista: HorarioEmpleadoVistaDto = {
         id: horario.id,
         fecha: horaInicio,
         horaInicio: hora,

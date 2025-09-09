@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Query, Param, Body, UseGuards, Delete, ParseIntPipe } from '@nestjs/common';
 import { CitasService } from './citas.service';
-import type { CrearCitaDto } from './citas.service';
-import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { CreateCitaDto } from './dto';
+import { ApiBearerAuth, ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiParam, ApiBody } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 const IResponse = require('../utils/IResponse.handle');
 
@@ -19,7 +19,10 @@ export class CitasController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post()
-  async crearCita(@Body() crearCitaDto: CrearCitaDto) {
+  @ApiOperation({ summary: 'Crear una nueva cita' })
+  @ApiResponse({ status: 201, description: 'Cita creada exitosamente' })
+  @ApiBody({ type: CreateCitaDto })
+  async crearCita(@Body() crearCitaDto: CreateCitaDto) {
     const data = await this.citasService.crearCita(crearCitaDto);
     return IResponse(data, 'Cita creada exitosamente', true);
   }

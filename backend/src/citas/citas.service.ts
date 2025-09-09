@@ -4,43 +4,7 @@ import { Cita } from './entities/cita.entity';
 import { Repository } from 'typeorm';
 import { Cliente } from '../clientes/entities/cliente.entity';
 import { Empleado } from '../empleados/entities/empleado.entity';
-
-export interface CrearCitaDto {
-  clienteId: number;
-  empleadoId: number;
-  fecha: string;
-  hora: string;
-  serviciosIds: number[];
-}
-
-export interface CitaEmpleadoVista {
-  id: number;
-  fecha: Date;
-  hora: string;
-  cliente: {
-    id: number;
-    nombres: string;
-    apellidos: string;
-    telefono: string;
-  };
-  servicios: string[];
-  precio: number;
-  cancelada: boolean;
-}
-
-export interface CitaClienteVista {
-  id: number;
-  fecha: Date;
-  hora: string;
-  empleado: {
-    id: number;
-    nombres: string;
-    apellidos: string;
-  };
-  servicios: string[];
-  precio: number;
-  cancelada: boolean;
-}
+import { CreateCitaDto, CitaEmpleadoVistaDto, CitaClienteVistaDto } from './dto';
 
 @Injectable()
 export class CitasService {
@@ -71,7 +35,7 @@ export class CitasService {
     }
   }
 
-  async crearCita(crearCitaDto: CrearCitaDto): Promise<Cita> {
+  async crearCita(crearCitaDto: CreateCitaDto): Promise<Cita> {
     try {
       const { clienteId, empleadoId, fecha, hora, serviciosIds } = crearCitaDto;
 
@@ -132,7 +96,7 @@ export class CitasService {
     }
   }
 
-  async obtenerCitasEmpleado(empleadoId: number, fecha?: string): Promise<CitaEmpleadoVista[]> {
+  async obtenerCitasEmpleado(empleadoId: number, fecha?: string): Promise<CitaEmpleadoVistaDto[]> {
     try {
       const query = this.citasRepository.createQueryBuilder('cita')
         .leftJoinAndSelect('cita.cliente', 'cliente')
@@ -170,7 +134,7 @@ export class CitasService {
     }
   }
 
-  async obtenerCitasCliente(clienteId: number): Promise<CitaClienteVista[]> {
+  async obtenerCitasCliente(clienteId: number): Promise<CitaClienteVistaDto[]> {
     try {
       const citas = await this.citasRepository.find({
         where: {
