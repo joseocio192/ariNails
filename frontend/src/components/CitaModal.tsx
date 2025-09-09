@@ -110,7 +110,7 @@ const CitaModal: React.FC<CitaModalProps> = ({ open, onClose, onCitaCreada }) =>
         serviciosIds: [], // Por ahora sin servicios específicos
       };
 
-      const apiUrl = process.env.REACT_APP_API_URL;
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const response = await fetch(`${apiUrl}/citas/crear`, {
         method: 'POST',
         headers: {
