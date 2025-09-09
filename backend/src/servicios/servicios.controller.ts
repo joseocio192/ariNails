@@ -3,8 +3,8 @@ import { ServiciosService } from './servicios.service';
 import { ApiTags } from '@nestjs/swagger';
 const IResponse = require('../utils/IResponse.handle');
 
-@Controller('servicios')
 @ApiTags('servicios')
+@Controller('servicios')
 export class ServiciosController {
   constructor(private readonly serviciosService: ServiciosService) {}
 

@@ -21,6 +21,7 @@ async function bootstrap() {
     .setDescription('The Citas API description')
     .setVersion('1.0')
     .addTag('citas')
+    .addBearerAuth()
     .build();
   const httpAdapter = app.getHttpAdapter();
   httpAdapter.get('/health', (_req, res) => {

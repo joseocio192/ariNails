@@ -24,7 +24,7 @@ export class Usuario extends GenericTableAttributes {
     email: string;
 
     @Column({nullable: false, comment: 'Contraseña del usuario'})
-    @Exclude({ toPlainOnly: true })
+    @Exclude()
     password: string;
 
     @Column({nullable: false, comment: 'Rol del usuario'})
