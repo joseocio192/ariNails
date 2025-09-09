@@ -123,7 +123,7 @@ const AdminDashboard: React.FC = () => {
           </Box>
 
           <TabPanel value={value} index={0}>
-            <AdminStatistics />
+            <AdminStatistics onTabChange={setValue} />
           </TabPanel>
 
           <TabPanel value={value} index={1}>

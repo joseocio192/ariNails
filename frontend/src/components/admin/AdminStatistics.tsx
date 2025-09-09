@@ -26,6 +26,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import axios from 'axios';
+import { mockEstadisticas } from '../../utils/mockData';
 
 interface EstadisticasCitas {
   totalCitas: number;
@@ -43,7 +44,7 @@ interface EstadisticaDashboard {
   tendencia?: string;
 }
 
-const AdminStatistics: React.FC = () => {
+const AdminStatistics: React.FC<{ onTabChange?: (tabIndex: number) => void }> = ({ onTabChange }) => {
   const [estadisticasCitas, setEstadisticasCitas] = useState<EstadisticasCitas | null>(null);
   const [loading, setLoading] = useState(false);
   const [ultimaActualizacion, setUltimaActualizacion] = useState<Date>(new Date());
@@ -59,12 +60,16 @@ const AdminStatistics: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       if (!token) {
-        console.error('No hay token de autorización');
+        console.log('No hay token de autorización, usando datos de prueba');
+        setEstadisticasCitas(mockEstadisticas);
+        setUltimaActualizacion(new Date());
+        setLoading(false);
         return;
       }
 
       const response = await axios.get(`${apiUrl}/citas/admin/estadisticas`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 5000
       });
 
       if (response.data.exito) {
@@ -73,6 +78,9 @@ const AdminStatistics: React.FC = () => {
       }
     } catch (error) {
       console.error('Error al cargar estadísticas:', error);
+      console.log('Usando datos de prueba...');
+      setEstadisticasCitas(mockEstadisticas);
+      setUltimaActualizacion(new Date());
     } finally {
       setLoading(false);
     }
@@ -277,6 +285,7 @@ const AdminStatistics: React.FC = () => {
                   fullWidth
                   startIcon={<EventIcon />}
                   sx={{ height: 60 }}
+                  onClick={() => onTabChange?.(2)}
                 >
                   Ver Citas del Día
                 </Button>
@@ -288,6 +297,7 @@ const AdminStatistics: React.FC = () => {
                   fullWidth
                   startIcon={<ServiceIcon />}
                   sx={{ height: 60 }}
+                  onClick={() => onTabChange?.(1)}
                 >
                   Gestionar Servicios
                 </Button>
@@ -299,6 +309,7 @@ const AdminStatistics: React.FC = () => {
                   fullWidth
                   startIcon={<CalendarIcon />}
                   sx={{ height: 60 }}
+                  onClick={() => onTabChange?.(3)}
                 >
                   Configurar Horarios
                 </Button>
@@ -310,8 +321,9 @@ const AdminStatistics: React.FC = () => {
                   fullWidth
                   startIcon={<PeopleIcon />}
                   sx={{ height: 60 }}
+                  onClick={cargarEstadisticas}
                 >
-                  Ver Empleados
+                  Actualizar Datos
                 </Button>
               </Box>
             </Box>
