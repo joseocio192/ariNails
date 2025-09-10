@@ -3,7 +3,6 @@ import { StripeService } from './stripe.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
-
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @Controller('stripe')
@@ -21,13 +20,17 @@ export class StripeController {
   }
 
   @Post('create-payment-intent')
-  async createPaymentIntent(@Body() body: { amount: number; currency: string }) {
+  async createPaymentIntent(
+    @Body() body: { amount: number; currency: string },
+  ) {
     const { amount, currency } = body;
     return this.stripeService.createPaymentIntent(amount, currency);
   }
 
   @Post('subscriptions')
-  async createSubscription(@Body() body: { customerId: string; priceId: string }) {
+  async createSubscription(
+    @Body() body: { customerId: string; priceId: string },
+  ) {
     const { customerId, priceId } = body;
     return this.stripeService.createSubscription(customerId, priceId);
   }
@@ -38,8 +41,14 @@ export class StripeController {
   }
 
   @Post('products')
-  async createProduct(@Body() body: { name: string; description: string; price: number }) {
-    return this.stripeService.createProduct(body.name, body.description, body.price);
+  async createProduct(
+    @Body() body: { name: string; description: string; price: number },
+  ) {
+    return this.stripeService.createProduct(
+      body.name,
+      body.description,
+      body.price,
+    );
   }
 
   @Post('refunds')

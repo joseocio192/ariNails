@@ -10,6 +10,8 @@ import { Empleado } from '../empleados/entities/empleado.entity';
 @Module({
   controllers: [CitasController],
   providers: [CitasService],
-  imports: [TypeOrmModule.forFeature([Cita, CitasToServicios, Cliente, Empleado])],
+  imports: [
+    TypeOrmModule.forFeature([Cita, CitasToServicios, Cliente, Empleado]),
+  ],
 })
 export class CitasModule {}

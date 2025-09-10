@@ -9,7 +9,9 @@ import { Rol } from '../usuario/entities/rol.entityt';
 import { Horario } from '../empleados/entities/horario.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Usuario, Empleado, Cliente, Cita, Rol, Horario])],
+  imports: [
+    TypeOrmModule.forFeature([Usuario, Empleado, Cliente, Cita, Rol, Horario]),
+  ],
   providers: [SeederService],
   exports: [SeederService],
 })

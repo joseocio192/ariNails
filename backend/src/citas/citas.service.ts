@@ -1,46 +1,19 @@
-import { Injectable, InternalServerErrorException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cita } from './entities/cita.entity';
 import { Repository } from 'typeorm';
 import { Cliente } from '../clientes/entities/cliente.entity';
 import { Empleado } from '../empleados/entities/empleado.entity';
-
-export interface CrearCitaDto {
-  clienteId: number;
-  empleadoId: number;
-  fecha: string;
-  hora: string;
-  serviciosIds: number[];
-}
-
-export interface CitaEmpleadoVista {
-  id: number;
-  fecha: Date;
-  hora: string;
-  cliente: {
-    id: number;
-    nombres: string;
-    apellidos: string;
-    telefono: string;
-  };
-  servicios: string[];
-  precio: number;
-  cancelada: boolean;
-}
-
-export interface CitaClienteVista {
-  id: number;
-  fecha: Date;
-  hora: string;
-  empleado: {
-    id: number;
-    nombres: string;
-    apellidos: string;
-  };
-  servicios: string[];
-  precio: number;
-  cancelada: boolean;
-}
+import {
+  CreateCitaDto,
+  CitaEmpleadoVistaDto,
+  CitaClienteVistaDto,
+} from './dto';
 
 @Injectable()
 export class CitasService {
@@ -51,11 +24,16 @@ export class CitasService {
     private readonly clienteRepository: Repository<Cliente>,
     @InjectRepository(Empleado)
     private readonly empleadoRepository: Repository<Empleado>,
-  ) { }
+  ) {}
 
-  async obtenerCitasDisponibles(month: string, year: string, empleadoid?: number) {
+  async obtenerCitasDisponibles(
+    month: string,
+    year: string,
+    empleadoid?: number,
+  ) {
     try {
-      const query = this.citasRepository.createQueryBuilder('cita')
+      const query = this.citasRepository
+        .createQueryBuilder('cita')
         .select('cita.fecha, cita.horaInicio, cita.horaFinEsperada')
         .where('EXTRACT(MONTH FROM cita.fecha) = :month', { month })
         .andWhere('EXTRACT(YEAR FROM cita.fecha) = :year', { year })
@@ -67,25 +45,29 @@ export class CitasService {
 
       return await query.getMany();
     } catch (error) {
-      throw new InternalServerErrorException('Error al obtener las citas disponibles: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al obtener las citas disponibles: ' + error.message,
+      );
     }
   }
 
-  async crearCita(crearCitaDto: CrearCitaDto): Promise<Cita> {
+  async crearCita(crearCitaDto: CreateCitaDto): Promise<Cita> {
     try {
       const { clienteId, empleadoId, fecha, hora, serviciosIds } = crearCitaDto;
 
       // Verificar que el cliente existe
-      const cliente = await this.clienteRepository.findOne({ 
+      const cliente = await this.clienteRepository.findOne({
         where: { id: clienteId },
-        relations: ['usuario']
+        relations: ['usuario'],
       });
       if (!cliente) {
         throw new NotFoundException('Cliente no encontrado');
       }
 
       // Verificar que el empleado existe
-      const empleado = await this.empleadoRepository.findOne({ where: { id: empleadoId } });
+      const empleado = await this.empleadoRepository.findOne({
+        where: { id: empleadoId },
+      });
       if (!empleado) {
         throw new NotFoundException('Empleado no encontrado');
       }
@@ -125,16 +107,25 @@ export class CitasService {
 
       return await this.citasRepository.save(nuevaCita);
     } catch (error) {
-      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      throw new InternalServerErrorException('Error al crear la cita: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al crear la cita: ' + error.message,
+      );
     }
   }
 
-  async obtenerCitasEmpleado(empleadoId: number, fecha?: string): Promise<CitaEmpleadoVista[]> {
+  async obtenerCitasEmpleado(
+    empleadoId: number,
+    fecha?: string,
+  ): Promise<CitaEmpleadoVistaDto[]> {
     try {
-      const query = this.citasRepository.createQueryBuilder('cita')
+      const query = this.citasRepository
+        .createQueryBuilder('cita')
         .leftJoinAndSelect('cita.cliente', 'cliente')
         .leftJoinAndSelect('cliente.usuario', 'usuarioCliente')
         .leftJoinAndSelect('cita.citasToServicios', 'citasToServicios')
@@ -151,60 +142,79 @@ export class CitasService {
 
       const citas = await query.getMany();
 
-      return citas.map(cita => ({
+      return citas.map((cita) => ({
         id: cita.id,
         fecha: cita.fecha,
         hora: cita.hora,
         cliente: {
           id: cita.cliente.id,
           nombres: cita.cliente.usuario?.nombres || 'Sin nombre',
-          apellidos: `${cita.cliente.usuario?.apellidoPaterno || ''} ${cita.cliente.usuario?.apellidoMaterno || ''}`.trim(),
+          apellidos:
+            `${cita.cliente.usuario?.apellidoPaterno || ''} ${cita.cliente.usuario?.apellidoMaterno || ''}`.trim(),
           telefono: cita.cliente.telefono || 'Sin teléfono',
         },
-        servicios: cita.citasToServicios?.map(cts => cts.servicio?.nombre).filter(Boolean) || [],
+        servicios:
+          cita.citasToServicios
+            ?.map((cts) => cts.servicio?.nombre)
+            .filter(Boolean) || [],
         precio: cita.precioFinal || 0,
         cancelada: cita.cancelada,
       }));
     } catch (error) {
-      throw new InternalServerErrorException('Error al obtener las citas del empleado: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al obtener las citas del empleado: ' + error.message,
+      );
     }
   }
 
-  async obtenerCitasCliente(clienteId: number): Promise<CitaClienteVista[]> {
+  async obtenerCitasCliente(clienteId: number): Promise<CitaClienteVistaDto[]> {
     try {
       const citas = await this.citasRepository.find({
         where: {
           cliente: { id: clienteId },
           estaActivo: true,
         },
-        relations: ['empleado', 'empleado.usuario', 'citasToServicios', 'citasToServicios.servicio'],
+        relations: [
+          'empleado',
+          'empleado.usuario',
+          'citasToServicios',
+          'citasToServicios.servicio',
+        ],
         order: {
           fecha: 'ASC',
           hora: 'ASC',
         },
       });
 
-      return citas.map(cita => ({
+      return citas.map((cita) => ({
         id: cita.id,
         fecha: cita.fecha,
         hora: cita.hora,
         empleado: {
           id: cita.empleado?.id || 0,
           nombres: cita.empleado?.usuario?.nombres || 'Sin asignar',
-          apellidos: `${cita.empleado?.usuario?.apellidoPaterno || ''} ${cita.empleado?.usuario?.apellidoMaterno || ''}`.trim(),
+          apellidos:
+            `${cita.empleado?.usuario?.apellidoPaterno || ''} ${cita.empleado?.usuario?.apellidoMaterno || ''}`.trim(),
         },
-        servicios: cita.citasToServicios?.map(cts => cts.servicio?.nombre).filter(Boolean) || [],
+        servicios:
+          cita.citasToServicios
+            ?.map((cts) => cts.servicio?.nombre)
+            .filter(Boolean) || [],
         precio: cita.precioFinal || 0,
         cancelada: cita.cancelada,
       }));
     } catch (error) {
-      throw new InternalServerErrorException('Error al obtener las citas del cliente: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al obtener las citas del cliente: ' + error.message,
+      );
     }
   }
 
   async cancelarCita(citaId: number, motivo: string): Promise<Cita> {
     try {
-      const cita = await this.citasRepository.findOne({ where: { id: citaId } });
+      const cita = await this.citasRepository.findOne({
+        where: { id: citaId },
+      });
       if (!cita) {
         throw new NotFoundException('Cita no encontrada');
       }
@@ -217,7 +227,138 @@ export class CitasService {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new InternalServerErrorException('Error al cancelar la cita: ' + error.message);
+      throw new InternalServerErrorException(
+        'Error al cancelar la cita: ' + error.message,
+      );
+    }
+  }
+
+  // Métodos específicos para administradores
+  async obtenerTodasLasCitas(fecha?: string): Promise<any[]> {
+    try {
+      let query = this.citasRepository
+        .createQueryBuilder('cita')
+        .leftJoinAndSelect('cita.cliente', 'cliente')
+        .leftJoinAndSelect('cliente.usuario', 'clienteUsuario')
+        .leftJoinAndSelect('cita.empleado', 'empleado')
+        .leftJoinAndSelect('empleado.usuario', 'empleadoUsuario')
+        .leftJoinAndSelect('cita.citasToServicios', 'citasToServicios')
+        .leftJoinAndSelect('citasToServicios.servicio', 'servicio')
+        .orderBy('cita.fecha', 'ASC')
+        .addOrderBy('cita.hora', 'ASC');
+
+      if (fecha) {
+        query = query.where('cita.fecha = :fecha', { fecha });
+      }
+
+      const citas = await query.getMany();
+
+      return citas.map((cita) => ({
+        id: cita.id,
+        fecha: cita.fecha,
+        hora: cita.hora,
+        horaInicio: cita.horaInicio,
+        horaFinEsperada: cita.horaFinEsperada,
+        horaFin: cita.horaFin,
+        cliente: {
+          id: cita.cliente.id,
+          nombres: cita.cliente.usuario.nombres,
+          apellidos: `${cita.cliente.usuario.apellidoPaterno} ${cita.cliente.usuario.apellidoMaterno}`,
+          telefono: cita.cliente.telefono,
+          email: cita.cliente.usuario.email,
+        },
+        empleado: cita.empleado
+          ? {
+              id: cita.empleado.id,
+              nombres: cita.empleado.usuario.nombres,
+              apellidos: `${cita.empleado.usuario.apellidoPaterno} ${cita.empleado.usuario.apellidoMaterno}`,
+            }
+          : null,
+        servicios: cita.citasToServicios.map((cts) => ({
+          id: cts.servicio.id,
+          nombre: cts.servicio.nombre,
+          precio: cts.servicio.precio,
+        })),
+        precio: cita.precio,
+        precioFull: cita.precioFull,
+        descuento: cita.descuento,
+        precioFinal: cita.precioFinal,
+        cancelada: cita.cancelada,
+        motivoCancelacion: cita.motivoCancelacion,
+      }));
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error al obtener todas las citas: ' + error.message,
+      );
+    }
+  }
+
+  async obtenerEstadisticasCitas() {
+    try {
+      const totalCitas = await this.citasRepository.count();
+      const citasCanceladas = await this.citasRepository.count({
+        where: { cancelada: true },
+      });
+      const citasCompletadas = await this.citasRepository.count({
+        where: { cancelada: false },
+      });
+
+      // Citas de hoy
+      const hoy = new Date().toISOString().split('T')[0];
+      const citasHoy = await this.citasRepository.count({
+        where: { fecha: new Date(hoy) },
+      });
+
+      // Ingresos totales (solo citas no canceladas)
+      const resultadoIngresos = await this.citasRepository
+        .createQueryBuilder('cita')
+        .select('SUM(cita.precioFinal)', 'total')
+        .where('cita.cancelada = false')
+        .getRawOne();
+
+      return {
+        totalCitas,
+        citasCanceladas,
+        citasCompletadas,
+        citasHoy,
+        ingresosTotales: parseFloat(resultadoIngresos.total) || 0,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Error al obtener estadísticas de citas: ' + error.message,
+      );
+    }
+  }
+
+  async actualizarEstadoCita(
+    citaId: number,
+    estado: 'completada' | 'cancelada',
+    motivo?: string,
+  ): Promise<Cita> {
+    try {
+      const cita = await this.citasRepository.findOne({
+        where: { id: citaId },
+      });
+      if (!cita) {
+        throw new NotFoundException('Cita no encontrada');
+      }
+
+      if (estado === 'cancelada') {
+        cita.cancelada = true;
+        cita.motivoCancelacion = motivo || 'Cancelada por administrador';
+      } else if (estado === 'completada') {
+        cita.cancelada = false;
+        cita.horaFin = new Date().toTimeString().split(' ')[0];
+      }
+
+      return await this.citasRepository.save(cita);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error al actualizar estado de la cita: ' + error.message,
+      );
     }
   }
 }

@@ -112,7 +112,7 @@ const CitaModal: React.FC<CitaModalProps> = ({ open, onClose, onCitaCreada }) =>
       };
 
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const response = await axios.post(`${apiUrl}/citas/crear`, citaDto, {
+      await axios.post(`${apiUrl}/citas/crear`, citaDto, {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,

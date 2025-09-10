@@ -99,11 +99,11 @@ export class StripeService {
   ): Promise<Stripe.Product> {
     try {
       const product = await this.stripe.products.create({ name, description });
-    await this.stripe.prices.create({
-      product: product.id,
-      unit_amount: price * 100, // amount in cents
-      currency: 'mxn',
-    });
+      await this.stripe.prices.create({
+        product: product.id,
+        unit_amount: price * 100, // amount in cents
+        currency: 'mxn',
+      });
       this.logger.log(`Product created successfully: ${name}`);
       return product;
     } catch (error) {
