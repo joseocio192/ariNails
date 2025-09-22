@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { LoginCredentials, RegisterData } from '../types/apiTypes';
 
 const API_URL = 'http://localhost:3000';
 
@@ -29,31 +30,7 @@ api.interceptors.response.use(
   }
 );
 
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface RegisterData {
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  usuario: string;
-  email: string;
-  password: string;
-}
-
-export interface User {
-  id: number;
-  usuario: string;
-  email: string;
-  nombres: string;
-  apellidoPaterno: string;
-  apellidoMaterno: string;
-  rolId: number;
-  rolNombre: string;
-  rolDescripcion: string;
-}
+// types are imported from src/types/apiTypes
 
 export const authService = {
   login: async (credentials: LoginCredentials) => {

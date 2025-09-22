@@ -8,8 +8,6 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: authService.login,
     onSuccess: () => {
-      // El token ya se guarda en authService.login
-      // Solo invalidar caché del perfil para refrescar datos
       queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
