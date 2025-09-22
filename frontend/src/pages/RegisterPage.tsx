@@ -154,7 +154,7 @@ const RegisterPage: React.FC = () => {
 
                     <TextField
                       fullWidth
-                      label="Telefono"
+                      label="Teléfono"
                       variant="outlined"
                       value={telefono}
                       onChange={(e) => setTelefono(sanitizePhone(e.target.value))}
