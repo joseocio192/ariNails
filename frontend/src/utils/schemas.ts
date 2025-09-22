@@ -26,7 +26,7 @@ export const PhoneSchema = z
   .string()
   .min(10, 'Numero inválido, debe tener al menos 10 digitos.')
   .max(10, 'Requerido')
-  .refine((v: string | undefined) => !v || /^[0-9]{7,15}$/.test(v), 'Teléfono inválido (solo números)');
+  .refine((v: string | undefined) => !v || /^[0-9]{10}$/.test(v), 'Teléfono inválido (solo números)');
 
 export const PasswordSchema = z
   .string()
