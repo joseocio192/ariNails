@@ -24,7 +24,7 @@ export const EmailSchema = z
 
 export const PhoneSchema = z
   .string()
-  .min(10, 'Numero inválido, debe tener al menos 10 digitos.')
+  .min(10, 'Número inválido, debe tener al menos 10 dígitos.')
   .max(10, 'Requerido')
   .refine((v: string | undefined) => !v || /^[0-9]{10}$/.test(v), 'Teléfono inválido (solo números)');
 
