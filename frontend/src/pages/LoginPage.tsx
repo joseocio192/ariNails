@@ -11,9 +11,11 @@ import {
   Container,
   Stack
 } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useLogin } from '../hooks/useAuth';
 import { Visibility, VisibilityOff, Person, Lock } from '@mui/icons-material';
+import TitleForm from '../components/TitleForm';
+import AuthFooter from '../components/AuthFooter';
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -48,43 +50,7 @@ const LoginPage: React.FC = () => {
       <Container maxWidth="sm">
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Logo Section */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mx: 'auto',
-                mb: 2,
-                boxShadow: '0 8px 32px rgba(236, 72, 153, 0.3)'
-              }}
-            >
-              <Typography variant="h3" sx={{ color: 'white', fontWeight: 'bold' }}>
-                AN
-              </Typography>
-            </Box>
-            <Typography 
-              variant="h4" 
-              sx={{ 
-                fontWeight: 'bold',
-                background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: 1
-              }}
-            >
-              AriNails
-            </Typography>
-            <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
-              Tu salón de belleza de confianza
-            </Typography>
-          </Box>
-
+          <TitleForm />
           {/* Login Card */}
           <Paper
             elevation={0}
@@ -186,8 +152,12 @@ const LoginPage: React.FC = () => {
 
                 {loginMutation.error && (
                   <Alert severity="error" sx={{ borderRadius: 2 }}>
-                    {(loginMutation.error as any)?.response?.data?.message || 'Error al iniciar sesión'}
-                  </Alert>
+                      {((() => {
+                        try {
+                          return (loginMutation.error as unknown as { response?: { data?: { message?: string } } })?.response?.data?.message;
+                        } catch { return undefined; }
+                      })()) || 'Error al iniciar sesión'}
+                    </Alert>
                 )}
 
                 <Button
@@ -237,19 +207,7 @@ const LoginPage: React.FC = () => {
                 </Button>
 
                 <Box sx={{ textAlign: 'center', pt: 2 }}>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                    ¿No tienes cuenta?
-                  </Typography>
-                  <Link 
-                    to="/register"
-                    style={{
-                      color: '#ec4899',
-                      textDecoration: 'none',
-                      fontWeight: 'semibold',
-                    }}
-                  >
-                    Crear una cuenta
-                  </Link>
+                  <AuthFooter prompt="¿No tienes cuenta?" actionText="Crear una cuenta" to="/register" variant="inline" />
                 </Box>
               </Stack>
             </Box>
