@@ -1,8 +1,11 @@
-import { Controller, Post, Body, Put } from '@nestjs/common';
+import { Controller, Post, Body, Put, UseGuards } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 const IResponse = require('../utils/IResponse.handle');
 
+@ApiTags('Usuario')
 @Controller('usuario')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
@@ -13,6 +16,8 @@ export class UsuarioController {
     return IResponse(usuario, 'cliente registrado exitosamente', true);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Put('/cliente' )
   async update(@Body() updateUsuarioDto: UpdateUsuarioDto) {
     const usuario = await this.usuarioService.updateUsuarioCliente(updateUsuarioDto);
