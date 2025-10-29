@@ -1,4 +1,3 @@
-
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
@@ -15,8 +14,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { 
-      userId: payload.sub, 
+    return {
+      userId: payload.sub,
       username: payload.username,
       email: payload.email,
       nombres: payload.nombres,
@@ -24,7 +23,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       apellidoMaterno: payload.apellidoMaterno,
       rolId: payload.rolId,
       rolNombre: payload.rolNombre,
-      rolDescripcion: payload.rolDescripcion
+      rolDescripcion: payload.rolDescripcion,
+      clienteId: payload.clienteId,
+      empleadoId: payload.empleadoId,
     };
   }
 }
