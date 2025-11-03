@@ -7,10 +7,11 @@ import { Cliente } from '../clientes/entities/cliente.entity';
 import { Cita } from '../citas/entities/cita.entity';
 import { Rol } from '../usuario/entities/rol.entityt';
 import { Horario } from '../empleados/entities/horario.entity';
+import { Servicio } from '../servicios/entities/servicio.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Usuario, Empleado, Cliente, Cita, Rol, Horario]),
+    TypeOrmModule.forFeature([Usuario, Empleado, Cliente, Cita, Rol, Horario, Servicio]),
   ],
   providers: [SeederService],
   exports: [SeederService],

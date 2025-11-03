@@ -24,7 +24,14 @@ export class StripeController {
     @Body() body: { amount: number; currency: string },
   ) {
     const { amount, currency } = body;
-    return this.stripeService.createPaymentIntent(amount, currency);
+    const paymentIntent = await this.stripeService.createPaymentIntent(
+      amount,
+      currency,
+    );
+    return {
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+    };
   }
 
   @Post('subscriptions')

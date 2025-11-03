@@ -19,20 +19,21 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     try {
       const user = await this.authService.validateUser(username, password);
       if (!user) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new UnauthorizedException('Credenciales inválidas');
       }
       return user;
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof UnauthorizedException
-      ) {
-        throw new UnauthorizedException('Invalid credentials');
+      // Propagar errores específicos
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException(error.message); // "El usuario no existe"
+      }
+      if (error instanceof UnauthorizedException) {
+        throw error; // "La contraseña es incorrecta" u otro mensaje
       }
       if (error instanceof BadRequestException) {
         throw error;
       }
-      throw new InternalServerErrorException('Failed to validate user');
+      throw new InternalServerErrorException('Error al validar el usuario');
     }
   }
 }

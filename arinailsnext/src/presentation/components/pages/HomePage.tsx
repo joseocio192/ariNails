@@ -18,6 +18,7 @@ import {
   AccordionDetails,
 } from '@mui/material';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ACCENT_GRADIENT, ACCENT_SOLID, BACKGROUND, CARD_BG } from '../../theme/colors';
 import { TestimonialCarousel } from '../ui/TestimonialCarousel';
 import { 
@@ -28,6 +29,7 @@ import {
   getContactInfo,
   getPolicies
 } from '../../../config/siteConfig';
+import { useAuth } from '../../hooks/useSimpleAuth';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the Map component so it's only rendered on client
@@ -51,6 +53,7 @@ interface PricingCardProps {
   originalPrice?: string;
   duration?: string;
   popular?: boolean;
+  onSelectClick?: () => void;
 }
 
 /**
@@ -63,7 +66,8 @@ const PricingCard: React.FC<PricingCardProps> = ({
   featured = false,
   popular = false,
   originalPrice,
-  duration
+  duration,
+  onSelectClick
 }) => {
   const isHighlighted = featured || popular;
   
@@ -166,7 +170,8 @@ const PricingCard: React.FC<PricingCardProps> = ({
       <Button 
         variant="contained" 
         fullWidth 
-        endIcon={<ArrowForward />} 
+        endIcon={<ArrowForward />}
+        onClick={onSelectClick}
         sx={{ 
           background: ACCENT_GRADIENT, 
           textTransform: 'none', 
@@ -193,6 +198,9 @@ const PricingCard: React.FC<PricingCardProps> = ({
  * Home Page Component
  */
 export const HomePage: React.FC = () => {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  
   // Load configuration data
   const content = getContent();
   const pricingPlans = getPricingPlans();
@@ -209,6 +217,15 @@ export const HomePage: React.FC = () => {
 
   const policies: readonly Policy[] = getPolicies();
   const [openPolicy, setOpenPolicy] = useState<string | null>(null);
+
+  // Handle CTA button click - redirect based on authentication
+  const handleCTAClick = () => {
+    if (isAuthenticated) {
+      router.push('/dashboard/client');
+    } else {
+      router.push('/login');
+    }
+  };
 
   return (
     <Box sx={{ minHeight: '100vh', background: BACKGROUND, overflow: 'hidden' }}>
@@ -247,8 +264,7 @@ export const HomePage: React.FC = () => {
               {content.hero.subtitle}
             </Typography>
             <Button
-              component={Link}
-              href="/login"
+              onClick={handleCTAClick}
               variant="contained"
               size="large"
               endIcon={<ArrowForward />}
@@ -302,7 +318,7 @@ export const HomePage: React.FC = () => {
                 // Make cards wider and ensure they stretch to same height
                 <Grid item xs={12} sm={10} md={6} lg={5} xl={4} key={index} sx={{ display: 'flex' }}>
                   <Box sx={{ width: '100%' }}>
-                    <PricingCard {...plan} />
+                    <PricingCard {...plan} onSelectClick={handleCTAClick} />
                   </Box>
                 </Grid>
               ))}
@@ -417,8 +433,7 @@ export const HomePage: React.FC = () => {
                 </Box>
               </Stack>
               <Button
-                component={Link}
-                href="/login"
+                onClick={handleCTAClick}
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForward />}

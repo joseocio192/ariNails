@@ -5,6 +5,7 @@ import {
   IsArray,
   IsDateString,
   Min,
+  IsOptional,
 } from 'class-validator';
 
 export class CreateCitaDto {
@@ -13,10 +14,16 @@ export class CreateCitaDto {
   @Min(1)
   clienteId: number;
 
-  @ApiProperty({ description: 'ID del empleado', example: 1, minimum: 1 })
+  @ApiProperty({ description: 'ID del empleado', example: 1, minimum: 1, required: false })
   @IsNumber()
   @Min(1)
-  empleadoId: number;
+  @IsOptional()
+  empleadoId?: number;
+
+  @ApiProperty({ description: 'ID del horario seleccionado (puede ser número o string)', example: '2671-10:00', required: false })
+  @IsString()
+  @IsOptional()
+  horarioId?: string;
 
   @ApiProperty({
     description: 'Fecha de la cita en formato YYYY-MM-DD',
@@ -40,4 +47,22 @@ export class CreateCitaDto {
   @IsArray()
   @IsNumber({}, { each: true })
   serviciosIds: number[];
+
+  @ApiProperty({
+    description: 'Monto del anticipo pagado',
+    example: 200,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  anticipoPagado?: number;
+
+  @ApiProperty({
+    description: 'ID del PaymentIntent de Stripe',
+    example: 'pi_1234567890',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  stripePaymentIntentId?: string;
 }

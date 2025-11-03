@@ -94,17 +94,40 @@ export class CitaClienteVistaDto {
 
   @ApiProperty({
     description: 'Lista de servicios a realizar',
-    example: ['Manicure Clásica', 'Pedicure Spa'],
-    type: [String],
+    example: [
+      {
+        id: 1,
+        nombre: 'Manicura',
+        precio: 100.0,
+      },
+    ],
+    type: 'array',
   })
-  servicios: string[];
+  servicios: Array<{
+    id: number;
+    nombre: string;
+    precio: number;
+  }>;
 
   @ApiProperty({ description: 'Precio total de la cita', example: 350.0 })
   precio: number;
+
+  @ApiProperty({ description: 'Anticipo pagado', example: 200.0 })
+  anticipoPagado: number;
+
+  @ApiProperty({ description: 'Saldo pendiente por pagar', example: 150.0 })
+  saldoPendiente: number;
 
   @ApiProperty({
     description: 'Indica si la cita está cancelada',
     example: false,
   })
   cancelada: boolean;
+
+  @ApiProperty({
+    description: 'Motivo de cancelación de la cita',
+    example: 'Cancelada por el cliente',
+    required: false,
+  })
+  motivoCancelacion?: string;
 }

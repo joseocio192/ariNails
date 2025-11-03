@@ -13,9 +13,19 @@ export { HomePage } from './components/pages/HomePage';
 export { LoginPage } from './components/pages/LoginPage';
 export { RegisterPage } from './components/pages/RegisterPage';
 export { ProfilePage } from './components/pages/ProfilePage';
+export { DashboardPage } from './components/pages/DashboardPage';
+export { ClientDashboardPage } from './components/pages/ClientDashboardPage';
 
 // Auth Components
 export { ProtectedRoute } from './components/auth/ProtectedRoute';
+export { 
+  RoleBasedContent, 
+  AdminOnly, 
+  EmployeeOnly, 
+  RoleClientOnly, 
+  StaffOnly,
+  withRoleProtection 
+} from './components/auth/RoleBasedContent';
 
 // UI Components
 export { TestimonialCarousel } from './components/ui/TestimonialCarousel';
@@ -27,6 +37,11 @@ export { AuthProvider } from './providers/SimpleAuthProvider';
 
 // Hooks
 export * from './hooks/useSimpleAuth';
+export { useUserRole } from './hooks/useUserRole';
+export * from './hooks/useCitas';
+export * from './hooks/useHorarios';
+export * from './hooks/useServicios';
+export { useToast } from './hooks/useToast';
 
 // Theme & Styling
 export * from './theme/colors';

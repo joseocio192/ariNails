@@ -1,10 +1,15 @@
-import { Layout } from "../../presentation/components/layout/Layout";
-import { ProfilePage } from "../../presentation/components/pages/ProfilePage";
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Profile() {
-  return (
-    <Layout>
-      <ProfilePage />
-    </Layout>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    // Redirigir automáticamente al dashboard del cliente
+    router.replace('/dashboard/client');
+  }, [router]);
+
+  return null;
 }

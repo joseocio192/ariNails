@@ -9,9 +9,25 @@ export interface User {
   readonly nombres: string;
   readonly apellidoPaterno: string;
   readonly apellidoMaterno: string;
-  readonly rolId: number;
-  readonly rolNombre: string;
-  readonly rolDescripcion: string;
+  readonly nombresCompletos: string;
+  readonly rol: {
+    readonly id: number;
+    readonly nombre: string;
+    readonly descripcion: string;
+  };
+  readonly clienteId?: number | null;
+  readonly empleadoId?: number | null;
+  readonly telefono?: string; // From cliente table
+  readonly direccion?: string; // From cliente table
+  readonly clientes?: Array<{
+    readonly id: number;
+    readonly telefono: string;
+    readonly direccion: string;
+  }>;
+  // Legacy fields for backward compatibility
+  readonly rolId?: number;
+  readonly rolNombre?: string;
+  readonly rolDescripcion?: string;
 }
 
 /**
@@ -31,7 +47,17 @@ export interface RegisterData {
   readonly apellidoMaterno: string;
   readonly usuario: string;
   readonly email: string;
+  readonly telefono: string;
   readonly password: string;
+}
+
+/**
+ * Value Object for updating user profile
+ */
+export interface UpdateProfileData {
+  readonly email?: string;
+  readonly telefono?: string;
+  readonly direccion?: string;
 }
 
 /**
@@ -55,8 +81,11 @@ export interface AuthResult {
 /**
  * Login response from backend
  */
-export interface LoginResponse extends BackendResponse<string> {
-  // data contains the JWT token
+export interface LoginResponse extends BackendResponse<{
+  token: string;
+  user: User;
+}> {
+  // data contains the token and user info
 }
 
 /**
@@ -80,15 +109,27 @@ export class UserEntity {
   constructor(private readonly user: User) {}
 
   get fullName(): string {
-    return `${this.user.nombres} ${this.user.apellidoPaterno} ${this.user.apellidoMaterno}`.trim();
+    return this.user.nombresCompletos || `${this.user.nombres} ${this.user.apellidoPaterno} ${this.user.apellidoMaterno}`.trim();
   }
 
   get isAdmin(): boolean {
-    return this.user.rolNombre.toLowerCase() === 'admin';
+    return (this.user.rol?.nombre || this.user.rolNombre || '').toLowerCase() === 'admin';
   }
 
   get isClient(): boolean {
-    return this.user.rolNombre.toLowerCase() === 'cliente';
+    return (this.user.rol?.nombre || this.user.rolNombre || '').toLowerCase() === 'cliente';
+  }
+  
+  get isEmployee(): boolean {
+    return (this.user.rol?.nombre || this.user.rolNombre || '').toLowerCase() === 'empleado';
+  }
+  
+  get roleName(): string {
+    return this.user.rol?.nombre || this.user.rolNombre || '';
+  }
+  
+  get roleDescription(): string {
+    return this.user.rol?.descripcion || this.user.rolDescripcion || '';
   }
 
   toJSON(): User {

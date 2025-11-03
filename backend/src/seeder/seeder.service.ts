@@ -7,6 +7,7 @@ import { Cliente } from '../clientes/entities/cliente.entity';
 import { Cita } from '../citas/entities/cita.entity';
 import { Rol } from '../usuario/entities/rol.entityt';
 import { Horario } from '../empleados/entities/horario.entity';
+import { Servicio } from '../servicios/entities/servicio.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -24,6 +25,8 @@ export class SeederService implements OnModuleInit {
     private rolRepository: Repository<Rol>,
     @InjectRepository(Horario)
     private horarioRepository: Repository<Horario>,
+    @InjectRepository(Servicio)
+    private servicioRepository: Repository<Servicio>,
   ) {}
 
   async onModuleInit() {
@@ -32,6 +35,7 @@ export class SeederService implements OnModuleInit {
     await this.crearUsuarioAdmin();
     await this.crearEmpleadosFicticios();
     await this.crearHorariosIniciales();
+    await this.crearServiciosBasicos();
     await this.crearClientesDePrueba();
     await this.crearCitasDePrueba();
     console.log('✅ Proceso de seeding completado');
@@ -626,5 +630,86 @@ export class SeederService implements OnModuleInit {
         console.error(`❌ Error al crear cita:`, error.message);
       }
     }
+  }
+
+  async crearServiciosBasicos() {
+    console.log('💅 Verificando y creando servicios...');
+
+    const serviciosExistentes = await this.servicioRepository.count();
+    if (serviciosExistentes > 0) {
+      console.log('Los servicios ya existen, saltando creación...');
+      return;
+    }
+
+    // Servicios Básicos
+    const serviciosBasicos = [
+      { nombre: 'Manicura', precio: 100 },
+      { nombre: 'Rubber Base', precio: 120 },
+      { nombre: 'Gel de Construcción', precio: 100 },
+      { nombre: 'Acrílico 1-2', precio: 100 },
+      { nombre: 'Acrílico 3-4', precio: 100 },
+      { nombre: 'Acrílico 5-6', precio: 100 },
+      { nombre: 'Retoque Gel 1-2', precio: 100 },
+      { nombre: 'Retoque Gel 3-4', precio: 100 },
+      { nombre: 'Retoque Gel 4-5', precio: 100 },
+      { nombre: 'Reconstrucción', precio: 90 },
+    ];
+
+    // Servicios Extras
+    const serviciosExtras = [
+      { nombre: 'Esmaltado', precio: 100 },
+      { nombre: 'Francés', precio: 10 },
+      { nombre: 'Encapsulado', precio: 100 },
+      { nombre: 'Mano Alzada', precio: 60 },
+      { nombre: '3D', precio: 15 },
+      { nombre: 'Relieves', precio: 10 },
+      { nombre: 'Cromados', precio: 6 },
+      { nombre: 'Cristales Chicos', precio: 100 },
+      { nombre: 'Cristales Grandes', precio: 100 },
+      { nombre: 'Cat Eye', precio: 100 },
+      { nombre: 'Aura/Difuminados', precio: 100 },
+    ];
+
+    // Crear servicios básicos
+    for (const servicioData of serviciosBasicos) {
+      try {
+        const nuevoServicio = this.servicioRepository.create({
+          nombre: servicioData.nombre,
+          descripcion: servicioData.nombre,
+          precio: servicioData.precio,
+          categoria: 'basico',
+          usuarioIdCreacion: 1,
+          usuarioIdActualizacion: 1,
+          estaActivo: true,
+        });
+
+        await this.servicioRepository.save(nuevoServicio);
+        console.log(`✅ Servicio básico '${servicioData.nombre}' creado (Precio: $${servicioData.precio})`);
+      } catch (error) {
+        console.error(`❌ Error al crear servicio '${servicioData.nombre}':`, error.message);
+      }
+    }
+
+    // Crear servicios extras
+    for (const servicioData of serviciosExtras) {
+      try {
+        const nuevoServicio = this.servicioRepository.create({
+          nombre: servicioData.nombre,
+          descripcion: servicioData.nombre,
+          precio: servicioData.precio,
+          categoria: 'extra',
+          usuarioIdCreacion: 1,
+          usuarioIdActualizacion: 1,
+          estaActivo: true,
+        });
+
+        await this.servicioRepository.save(nuevoServicio);
+        console.log(`✅ Servicio extra '${servicioData.nombre}' creado (Precio: $${servicioData.precio})`);
+      } catch (error) {
+        console.error(`❌ Error al crear servicio '${servicioData.nombre}':`, error.message);
+      }
+    }
+
+    console.log('✅ Todos los servicios han sido creados exitosamente');
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   TextField, 
   Button, 
@@ -17,7 +17,7 @@ import {
 import { Visibility, VisibilityOff, Person, Lock, ArrowForward } from '@mui/icons-material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useLogin } from '../../hooks/useSimpleAuth';
+import { useLogin, useAuth } from '../../hooks/useSimpleAuth';
 import { ACCENT_GRADIENT, BACKGROUND, ACCENT_SOLID } from '../../theme/colors';
 
 /**
@@ -30,6 +30,21 @@ export const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const loginMutation = useLogin();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.rol?.nombre === 'admin') {
+        router.push('/dashboard/admin');
+      } else if (user.rol?.nombre === 'empleado') {
+        router.push('/dashboard/employee');
+      } else {
+        router.push('/dashboard/client');
+      }
+    }
+  }, [isAuthenticated, user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +57,7 @@ export const LoginPage: React.FC = () => {
       { username: username.trim(), password },
       {
         onSuccess: () => {
-          router.push('/profile');
+          router.push('/dashboard/client');
         },
       }
     );
@@ -72,15 +87,24 @@ export const LoginPage: React.FC = () => {
             alignItems: 'center',
             mb: 4
           }}>
-            <Box sx={{ 
-              width: 80, 
-              height: 80, 
-              borderRadius: '50%',
-              overflow: 'hidden',
-              boxShadow: '0 8px 24px rgba(127, 161, 123, 0.3)',
-              background: 'white',
-              mb: 2,
-            }}>
+            <Box 
+              onClick={() => router.push('/')}
+              sx={{ 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%',
+                overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(127, 161, 123, 0.3)',
+                background: 'white',
+                mb: 2,
+                cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 12px 32px rgba(127, 161, 123, 0.4)',
+                },
+              }}
+            >
               <img 
                 src="/logo.png" 
                 alt="Ari Nails Logo" 
@@ -139,8 +163,11 @@ export const LoginPage: React.FC = () => {
                 sx={{ 
                   mb: 3, 
                   borderRadius: 2,
+                  border: '1px solid',
+                  borderColor: 'error.main',
                   '& .MuiAlert-message': {
-                    fontSize: '0.875rem'
+                    fontSize: '0.9rem',
+                    fontWeight: 500
                   }
                 }}
               >

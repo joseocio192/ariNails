@@ -5,7 +5,8 @@ import {
   AuthResult,
   LoginResponse,
   RegisterResponse,
-  ProfileResponse 
+  ProfileResponse,
+  UpdateProfileData 
 } from '../entities/User';
 
 /**
@@ -17,6 +18,7 @@ export interface IAuthRepository {
   logout(): Promise<void>;
   register(userData: RegisterData): Promise<RegisterResponse>;
   getProfile(): Promise<ProfileResponse>;
+  updateProfile(profileData: UpdateProfileData): Promise<ProfileResponse>;
 }
 
 /**

@@ -86,6 +86,16 @@ export class CitasController {
     description: 'Fecha específica en formato YYYY-MM-DD',
     example: '2024-12-20',
   })
+  @ApiQuery({
+    name: 'fechaInicio',
+    required: false,
+    description: 'Fecha de inicio del rango (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'fechaFin',
+    required: false,
+    description: 'Fecha de fin del rango (YYYY-MM-DD)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Citas del empleado obtenidas exitosamente',
@@ -93,10 +103,14 @@ export class CitasController {
   async obtenerCitasEmpleado(
     @Param('empleadoId') empleadoId: number,
     @Query('fecha') fecha?: string,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
   ) {
     const data = await this.citasService.obtenerCitasEmpleado(
       empleadoId,
       fecha,
+      fechaInicio,
+      fechaFin,
     );
     return IResponse(data, 'Citas del empleado obtenidas exitosamente', true);
   }
@@ -107,6 +121,47 @@ export class CitasController {
   async obtenerCitasCliente(@Param('clienteId') clienteId: number) {
     const data = await this.citasService.obtenerCitasCliente(clienteId);
     return IResponse(data, 'Citas del cliente obtenidas exitosamente', true);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post('/:citaId/cancelar')
+  @ApiOperation({ summary: 'Cancelar o reagendar una cita' })
+  @ApiParam({ name: 'citaId', description: 'ID de la cita a cancelar/reagendar' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        motivo: { type: 'string', description: 'Motivo de la cancelación/reagendado' },
+        realizarReembolso: { type: 'boolean', description: 'Si se debe reembolsar al cliente' },
+        nuevaFecha: { type: 'string', description: 'Nueva fecha para reagendar (YYYY-MM-DD)' },
+        nuevaHora: { type: 'string', description: 'Nueva hora para reagendar (HH:mm)' },
+      },
+      required: ['motivo', 'realizarReembolso'],
+    },
+  })
+  async cancelarOReagendarCita(
+    @Param('citaId', ParseIntPipe) citaId: number,
+    @Body() body: { 
+      motivo: string;
+      realizarReembolso: boolean;
+      nuevaFecha?: string;
+      nuevaHora?: string;
+    },
+  ) {
+    const data = await this.citasService.cancelarOReagendarCita(
+      citaId,
+      body.motivo,
+      body.realizarReembolso,
+      body.nuevaFecha,
+      body.nuevaHora,
+    );
+    
+    const mensaje = body.realizarReembolso 
+      ? 'Cita cancelada y reembolso procesado exitosamente'
+      : 'Cita reagendada exitosamente';
+    
+    return IResponse(data, mensaje, true);
   }
 
   @ApiBearerAuth()
@@ -130,9 +185,27 @@ export class CitasController {
     required: false,
     description: 'Filtrar por fecha específica (YYYY-MM-DD)',
   })
+  @ApiQuery({
+    name: 'fechaInicio',
+    required: false,
+    description: 'Fecha de inicio del rango (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'fechaFin',
+    required: false,
+    description: 'Fecha de fin del rango (YYYY-MM-DD)',
+  })
   @ApiResponse({ status: 200, description: 'Citas obtenidas exitosamente' })
-  async obtenerTodasLasCitas(@Query('fecha') fecha?: string) {
-    const data = await this.citasService.obtenerTodasLasCitas(fecha);
+  async obtenerTodasLasCitas(
+    @Query('fecha') fecha?: string,
+    @Query('fechaInicio') fechaInicio?: string,
+    @Query('fechaFin') fechaFin?: string,
+  ) {
+    const data = await this.citasService.obtenerTodasLasCitas(
+      fecha,
+      fechaInicio,
+      fechaFin,
+    );
     return IResponse(data, 'Todas las citas obtenidas exitosamente', true);
   }
 

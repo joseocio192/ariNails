@@ -3,6 +3,7 @@ import { GetUser } from '../utils/get-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { LocalAuthGuard } from '../auth/local-auth.guard';
 import { AuthService } from '../auth/auth.service';
+import { UsuarioService } from '../usuario/usuario.service';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -16,7 +17,10 @@ const IResponse = require('../utils/IResponse.handle');
 @ApiTags('auth')
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usuarioService: UsuarioService,
+  ) {}
 
   @UseGuards(LocalAuthGuard)
   @Post('auth/login')
@@ -26,12 +30,14 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Credenciales inválidas' })
   @ApiBody({ type: LoginDto })
   async login(@GetUser() user) {
-    const token = await this.authService.login(user);
+    const loginResult = await this.authService.login(user);
     console.log(
-      '🔑 Login successful, token generated:',
-      token.substring(0, 20) + '...',
+      '🔑 Login successful for user:',
+      loginResult.user.usuario,
+      'with role:',
+      loginResult.user.rol.nombre,
     );
-    return IResponse(token, 'Login exitoso', true);
+    return IResponse(loginResult, 'Login exitoso', true);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -40,8 +46,32 @@ export class AuthController {
   @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
   @ApiResponse({ status: 200, description: 'Perfil obtenido exitosamente' })
   @ApiResponse({ status: 401, description: 'Token inválido o expirado' })
-  getProfile(@Request() req) {
-    return IResponse(req.user, 'Perfil obtenido exitosamente', true);
+  async getProfile(@Request() req) {
+    // Obtener el perfil actualizado desde la base de datos
+    const usuario = await this.usuarioService.getProfileById(req.user.userId);
+    
+    // Construir el objeto de respuesta con telefono y direccion
+    const profile = {
+      id: usuario.id,
+      usuario: usuario.usuario,
+      email: usuario.email,
+      nombres: usuario.nombres,
+      apellidoPaterno: usuario.apellidoPaterno,
+      apellidoMaterno: usuario.apellidoMaterno,
+      nombresCompletos: `${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno || ''}`.trim(),
+      rol: {
+        id: usuario.rol_id,
+        nombre: usuario.rol?.nombre,
+        descripcion: usuario.rol?.descripcion,
+      },
+      clienteId: usuario.clientes && usuario.clientes.length > 0 ? usuario.clientes[0].id : null,
+      empleadoId: usuario.empleados && usuario.empleados.length > 0 ? usuario.empleados[0].id : null,
+      telefono: usuario.clientes && usuario.clientes.length > 0 ? usuario.clientes[0].telefono : null,
+      direccion: usuario.clientes && usuario.clientes.length > 0 ? usuario.clientes[0].direccion : null,
+      clientes: usuario.clientes || [],
+    };
+    
+    return IResponse(profile, 'Perfil obtenido exitosamente', true);
   }
 
   @ApiBearerAuth()

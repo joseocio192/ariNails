@@ -21,6 +21,7 @@ import {
 import { Menu as MenuIcon, Close as CloseIcon } from '@mui/icons-material';
 import { HEADER_BG, ACCENT_GRADIENT, ACCENT_SOLID } from '../../theme/colors';
 import { useAuth, useLogout } from '../../hooks/useSimpleAuth';
+import { useUserRole } from '../../hooks/useUserRole';
 import { ClientOnly } from '../common/ClientOnly';
 
 /**
@@ -40,6 +41,7 @@ export const Header: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
+  const { isAdmin, isEmployee, isClient } = useUserRole();
   const logoutMutation = useLogout();
 
   const handleDrawerToggle = () => {
@@ -131,25 +133,50 @@ export const Header: React.FC = () => {
       {/* Auth-dependent navigation */}
       <ClientOnly>
         {isAuthenticated && (
-          <Button 
-            key="profile"
-            component={Link}
-            href="/profile"
-            sx={{ 
-              textTransform: 'none', 
-              color: pathname === '/profile' ? ACCENT_SOLID : 'text.primary',
-              fontWeight: pathname === '/profile' ? 600 : 500,
-              px: 2,
-              py: 1,
-              borderRadius: 2,
-              '&:hover': {
-                backgroundColor: 'rgba(125, 150, 116, 0.08)',
-                color: ACCENT_SOLID,
-              },
-            }}
-          >
-            Perfil
-          </Button>
+          <>
+            {(isAdmin || isEmployee) && (
+              <Button 
+                key="dashboard"
+                component={Link}
+                href="/dashboard"
+                sx={{ 
+                  textTransform: 'none', 
+                  color: pathname === '/dashboard' ? ACCENT_SOLID : 'text.primary',
+                  fontWeight: pathname === '/dashboard' ? 600 : 500,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(125, 150, 116, 0.08)',
+                    color: ACCENT_SOLID,
+                  },
+                }}
+              >
+                Dashboard
+              </Button>
+            )}
+            {isClient && (
+              <Button 
+                key="dashboard-client"
+                component={Link}
+                href="/dashboard/client"
+                sx={{ 
+                  textTransform: 'none', 
+                  color: pathname === '/dashboard/client' ? ACCENT_SOLID : 'text.primary',
+                  fontWeight: pathname === '/dashboard/client' ? 600 : 500,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(125, 150, 116, 0.08)',
+                    color: ACCENT_SOLID,
+                  },
+                }}
+              >
+                Mi Dashboard
+              </Button>
+            )}
+          </>
         )}
         
         {isAuthenticated ? (
@@ -252,22 +279,44 @@ export const Header: React.FC = () => {
         {/* Auth-dependent menu items */}
         <ClientOnly>
           {isAuthenticated && (
-            <ListItem key="profile" disablePadding>
-              <ListItemButton
-                component={Link}
-                href="/profile"
-                onClick={handleDrawerToggle}
-                sx={{
-                  color: pathname === '/profile' ? ACCENT_SOLID : 'text.primary',
-                  fontWeight: pathname === '/profile' ? 600 : 400,
-                  '&:hover': {
-                    backgroundColor: 'rgba(125, 150, 116, 0.08)',
-                  },
-                }}
-              >
-                <ListItemText primary="Perfil" />
-              </ListItemButton>
-            </ListItem>
+            <>
+              {(isAdmin || isEmployee) && (
+                <ListItem key="dashboard" disablePadding>
+                  <ListItemButton
+                    component={Link}
+                    href="/dashboard"
+                    onClick={handleDrawerToggle}
+                    sx={{
+                      color: pathname === '/dashboard' ? ACCENT_SOLID : 'text.primary',
+                      fontWeight: pathname === '/dashboard' ? 600 : 400,
+                      '&:hover': {
+                        backgroundColor: 'rgba(125, 150, 116, 0.08)',
+                      },
+                    }}
+                  >
+                    <ListItemText primary="Dashboard" />
+                  </ListItemButton>
+                </ListItem>
+              )}
+              {isClient && (
+                <ListItem key="dashboard-client" disablePadding>
+                  <ListItemButton
+                    component={Link}
+                    href="/dashboard/client"
+                    onClick={handleDrawerToggle}
+                    sx={{
+                      color: pathname === '/dashboard/client' ? ACCENT_SOLID : 'text.primary',
+                      fontWeight: pathname === '/dashboard/client' ? 600 : 400,
+                      '&:hover': {
+                        backgroundColor: 'rgba(125, 150, 116, 0.08)',
+                      },
+                    }}
+                  >
+                    <ListItemText primary="Mi Dashboard" />
+                  </ListItemButton>
+                </ListItem>
+              )}
+            </>
           )}
         </ClientOnly>
         

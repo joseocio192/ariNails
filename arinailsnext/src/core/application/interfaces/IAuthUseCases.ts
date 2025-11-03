@@ -1,4 +1,4 @@
-import { LoginCredentials, RegisterData, User } from '@/core/domain/entities/User';
+import { LoginCredentials, RegisterData, User, UpdateProfileData } from '@/core/domain/entities/User';
 
 /**
  * Authentication Use Cases Interface
@@ -9,6 +9,7 @@ export interface IAuthUseCases {
   logout(): Promise<void>;
   register(userData: RegisterData): Promise<User>;
   getCurrentUser(): Promise<User | null>;
+  updateProfile(profileData: UpdateProfileData): Promise<User>;
   isAuthenticated(): boolean;
 }
 

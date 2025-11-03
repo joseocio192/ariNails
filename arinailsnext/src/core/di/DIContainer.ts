@@ -4,6 +4,8 @@ import { BrowserTokenStorage } from '../infrastructure/storage/BrowserTokenStora
 import { AxiosHttpClient, IHttpClient } from '../infrastructure/http/AxiosHttpClient';
 import { AuthRepository } from '../infrastructure/repositories/AuthRepository';
 import { AuthUseCases } from '../application/usecases/AuthUseCases';
+import { CitasRepository } from '../infrastructure/repositories/CitasRepository';
+import { HorariosRepository } from '../infrastructure/repositories/HorariosRepository';
 
 /**
  * Dependency Injection Container
@@ -39,6 +41,14 @@ export class DIContainer {
       this.dependencies.get('ITokenStorage')
     ));
 
+    this.dependencies.set('CitasRepository', new CitasRepository(
+      this.dependencies.get('IHttpClient')
+    ));
+
+    this.dependencies.set('HorariosRepository', new HorariosRepository(
+      this.dependencies.get('IHttpClient')
+    ));
+
     // Use Cases
     this.dependencies.set('IAuthUseCases', new AuthUseCases(
       this.dependencies.get('IAuthRepository'),
@@ -65,5 +75,13 @@ export class DIContainer {
 
   getAuthRepository(): IAuthRepository {
     return this.get<IAuthRepository>('IAuthRepository');
+  }
+
+  getCitasRepository(): CitasRepository {
+    return this.get<CitasRepository>('CitasRepository');
+  }
+
+  getHorariosRepository(): HorariosRepository {
+    return this.get<HorariosRepository>('HorariosRepository');
   }
 }

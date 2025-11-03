@@ -1,6 +1,6 @@
 import { IAuthUseCases, AuthError } from '../interfaces/IAuthUseCases';
 import { IAuthRepository, ITokenStorage } from '../../domain/repositories/IAuthRepository';
-import { LoginCredentials, RegisterData, User } from '../../domain/entities/User';
+import { LoginCredentials, RegisterData, User, UpdateProfileData } from '../../domain/entities/User';
 
 /**
  * Authentication Use Cases Implementation
@@ -19,18 +19,18 @@ export class AuthUseCases implements IAuthUseCases {
     try {
       const result = await this.authRepository.login(credentials);
       
-      if (!result.isValid) {
+      if (!result.isValid || !result.data) {
         throw new AuthError('Credenciales inválidas', 'INVALID_CREDENTIALS');
       }
 
-      // Get user profile after successful login
-      const profileResponse = await this.authRepository.getProfile();
+      // El backend ahora retorna el usuario directamente en la respuesta
+      const { user } = result.data;
       
-      if (!profileResponse.isValid || !profileResponse.data) {
-        throw new AuthError('Error al obtener perfil de usuario', 'PROFILE_ERROR');
+      if (!user) {
+        throw new AuthError('Error al obtener datos del usuario', 'USER_DATA_ERROR');
       }
 
-      return profileResponse.data;
+      return user;
     } catch (error) {
       if (error instanceof AuthError) {
         throw error;
@@ -98,6 +98,30 @@ export class AuthUseCases implements IAuthUseCases {
     }
   }
 
+  async updateProfile(profileData: UpdateProfileData): Promise<User> {
+    // Business rule: validate profile data
+    this.validateProfileData(profileData);
+
+    try {
+      const result = await this.authRepository.updateProfile(profileData);
+      
+      if (!result.isValid || !result.data) {
+        throw new AuthError(
+          result.message || 'Error al actualizar perfil', 
+          'UPDATE_PROFILE_FAILED'
+        );
+      }
+
+      return result.data;
+    } catch (error) {
+      if (error instanceof AuthError) {
+        throw error;
+      }
+      console.error('Update profile error:', error);
+      throw new AuthError('Error al actualizar perfil', 'UPDATE_PROFILE_FAILED');
+    }
+  }
+
   isAuthenticated(): boolean {
     return this.tokenStorage.isAuthenticated();
   }
@@ -131,6 +155,20 @@ export class AuthUseCases implements IAuthUseCases {
 
     if (!userData.password || userData.password.length < 6) {
       throw new AuthError('La contraseña debe tener al menos 6 caracteres', 'INVALID_PASSWORD');
+    }
+  }
+
+  private validateProfileData(profileData: UpdateProfileData): void {
+    if (profileData.email && !this.isValidEmail(profileData.email)) {
+      throw new AuthError('El email no es válido', 'INVALID_EMAIL');
+    }
+
+    if (profileData.telefono && !/^\d{10}$/.test(profileData.telefono)) {
+      throw new AuthError('El teléfono debe tener 10 dígitos', 'INVALID_PHONE');
+    }
+
+    if (profileData.direccion && profileData.direccion.trim().length < 10) {
+      throw new AuthError('La dirección debe tener al menos 10 caracteres', 'INVALID_ADDRESS');
     }
   }
 

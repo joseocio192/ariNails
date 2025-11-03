@@ -3,8 +3,10 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { Usuario } from './entities/usuario.entity';
 import { Rol } from './entities/rol.entityt';
 import { Cliente } from '../clientes/entities/cliente.entity';
@@ -92,9 +94,9 @@ export class UsuarioService {
       const usuario = this.usuarioRepository.create(usuarioSanitizado);
       await this.usuarioRepository.save(usuario);
 
-      // Crear automáticamente el registro de Cliente
+      // Crear automáticamente el registro de Cliente con el teléfono
       const cliente = this.clienteRepository.create({
-        telefono: '', // Campo por defecto, se puede actualizar después
+        telefono: createUsuarioDto.telefono || '', // Guardar el teléfono del formulario
         direccion: '', // Campo por defecto, se puede actualizar después
         usuario: usuario,
         usuarioIdCreacion: 1,
@@ -209,6 +211,122 @@ export class UsuarioService {
       throw new NotFoundException(
         `Usuario with ID ${updateUsuarioDto.id} not found`,
       );
+    }
+  }
+
+  /**
+   * Update user profile (email, phone, address)
+   * @param userId - The ID of the user to update
+   * @param updateProfileDto - The data to update
+   * @returns The updated user with cliente information
+   */
+  async updateProfile(
+    userId: number,
+    updateProfileDto: UpdateProfileDto,
+  ): Promise<Usuario> {
+    try {
+      // Find the user with cliente relation
+      const usuario = await this.usuarioRepository.findOne({
+        where: { id: userId },
+        relations: ['clientes'],
+      });
+
+      if (!usuario) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      // Check if email is being updated and if it's already taken by another user
+      if (updateProfileDto.email && updateProfileDto.email !== usuario.email) {
+        const existingUserWithEmail = await this.usuarioRepository.findOne({
+          where: { email: updateProfileDto.email },
+        });
+        
+        if (existingUserWithEmail && existingUserWithEmail.id !== userId) {
+          throw new ConflictException('El correo electrónico ya está en uso por otro usuario');
+        }
+        
+        usuario.email = updateProfileDto.email;
+      }
+
+      // Check if phone is being updated and if it's already taken by another cliente
+      if (updateProfileDto.telefono) {
+        const existingClienteWithPhone = await this.clienteRepository.findOne({
+          where: { telefono: updateProfileDto.telefono },
+          relations: ['usuario'],
+        });
+        
+        if (existingClienteWithPhone && existingClienteWithPhone.usuario.id !== userId) {
+          throw new ConflictException('El teléfono ya está en uso por otro cliente');
+        }
+      }
+
+      // Update usuario fields
+      if (updateProfileDto.email) {
+        usuario.email = updateProfileDto.email;
+        usuario.usuarioIdActualizacion = userId;
+      }
+
+      await this.usuarioRepository.save(usuario);
+
+      // Update cliente fields if user has a cliente record
+      if (usuario.clientes && usuario.clientes.length > 0) {
+        const cliente = usuario.clientes[0];
+        
+        if (updateProfileDto.telefono !== undefined) {
+          cliente.telefono = updateProfileDto.telefono;
+        }
+        
+        if (updateProfileDto.direccion !== undefined) {
+          cliente.direccion = updateProfileDto.direccion;
+        }
+        
+        cliente.usuarioIdActualizacion = userId;
+        await this.clienteRepository.save(cliente);
+      } else {
+        throw new NotFoundException('No se encontró el registro de cliente asociado');
+      }
+
+      // Return updated user with relations
+      const updatedUsuario = await this.usuarioRepository.findOne({
+        where: { id: userId },
+        relations: ['clientes', 'rol'],
+      });
+
+      if (!updatedUsuario) {
+        throw new NotFoundException('Usuario no encontrado después de actualizar');
+      }
+
+      return updatedUsuario;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof ConflictException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error al actualizar el perfil');
+    }
+  }
+
+  /**
+   * Get user profile by ID with all relations
+   * @param userId - The ID of the user
+   * @returns The user with all relations including cliente data
+   */
+  async getProfileById(userId: number): Promise<Usuario> {
+    try {
+      const usuario = await this.usuarioRepository.findOne({
+        where: { id: userId },
+        relations: ['rol', 'clientes', 'empleados'],
+      });
+
+      if (!usuario) {
+        throw new NotFoundException('Usuario no encontrado');
+      }
+
+      return usuario;
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error al obtener el perfil');
     }
   }
 }

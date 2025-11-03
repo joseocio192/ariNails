@@ -8,6 +8,7 @@ export interface IHttpClient {
   get<T>(url: string): Promise<T>;
   post<T>(url: string, data?: any): Promise<T>;
   put<T>(url: string, data?: any): Promise<T>;
+  patch<T>(url: string, data?: any): Promise<T>;
   delete<T>(url: string): Promise<T>;
 }
 
@@ -50,11 +51,16 @@ export class AxiosHttpClient implements IHttpClient {
       (error: any) => {
         // Handle 401 Unauthorized
         if (error.response?.status === 401) {
-          this.tokenStorage.removeToken();
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login';
+          // No remover token ni redirigir si estamos en la página de login
+          const isLoginAttempt = error.config?.url?.includes('/auth/login');
+          
+          if (!isLoginAttempt) {
+            this.tokenStorage.removeToken();
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login';
+            }
+            throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
           }
-          throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
         }
 
         // Handle other HTTP errors
@@ -94,6 +100,11 @@ export class AxiosHttpClient implements IHttpClient {
 
   async put<T>(url: string, data?: any): Promise<T> {
     const response = await this.client.put<T>(url, data);
+    return response.data;
+  }
+
+  async patch<T>(url: string, data?: any): Promise<T> {
+    const response = await this.client.patch<T>(url, data);
     return response.data;
   }
 

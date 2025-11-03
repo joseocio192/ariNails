@@ -9,14 +9,20 @@ import { Cita } from './entities/cita.entity';
 import { Repository } from 'typeorm';
 import { Cliente } from '../clientes/entities/cliente.entity';
 import { Empleado } from '../empleados/entities/empleado.entity';
+import { Horario } from '../empleados/entities/horario.entity';
+import { Servicio } from '../servicios/entities/servicio.entity';
+import { CitasToServicios } from './entities/citasToServicios.entity';
 import {
   CreateCitaDto,
   CitaEmpleadoVistaDto,
   CitaClienteVistaDto,
 } from './dto';
+import Stripe from 'stripe';
 
 @Injectable()
 export class CitasService {
+  private stripe: Stripe;
+
   constructor(
     @InjectRepository(Cita)
     private readonly citasRepository: Repository<Cita>,
@@ -24,7 +30,18 @@ export class CitasService {
     private readonly clienteRepository: Repository<Cliente>,
     @InjectRepository(Empleado)
     private readonly empleadoRepository: Repository<Empleado>,
-  ) {}
+    @InjectRepository(Horario)
+    private readonly horariosRepository: Repository<Horario>,
+    @InjectRepository(Servicio)
+    private readonly serviciosRepository: Repository<Servicio>,
+    @InjectRepository(CitasToServicios)
+    private readonly citasToServiciosRepository: Repository<CitasToServicios>,
+  ) {
+    // Inicializar Stripe con la clave secreta
+    this.stripe = new Stripe(process.env.STRIPE_API_KEY || '', {
+      apiVersion: '2025-08-27.basil',
+    });
+  }
 
   async obtenerCitasDisponibles(
     month: string,
@@ -53,7 +70,16 @@ export class CitasService {
 
   async crearCita(crearCitaDto: CreateCitaDto): Promise<Cita> {
     try {
-      const { clienteId, empleadoId, fecha, hora, serviciosIds } = crearCitaDto;
+      const {
+        clienteId,
+        empleadoId,
+        horarioId,
+        fecha,
+        hora,
+        serviciosIds,
+        anticipoPagado,
+        stripePaymentIntentId,
+      } = crearCitaDto;
 
       // Verificar que el cliente existe
       const cliente = await this.clienteRepository.findOne({
@@ -64,12 +90,38 @@ export class CitasService {
         throw new NotFoundException('Cliente no encontrado');
       }
 
-      // Verificar que el empleado existe
-      const empleado = await this.empleadoRepository.findOne({
-        where: { id: empleadoId },
-      });
-      if (!empleado) {
-        throw new NotFoundException('Empleado no encontrado');
+      let empleado: Empleado;
+
+      // Si se proporciona horarioId, obtener el empleado de ahí
+      if (horarioId) {
+        // El horarioId viene en formato "horarioRealId-hora", extraer el ID numérico
+        const horarioRealId = parseInt(horarioId.split('-')[0], 10);
+        
+        if (isNaN(horarioRealId)) {
+          throw new BadRequestException('Formato de horarioId inválido');
+        }
+        
+        const horario = await this.horariosRepository.findOne({
+          where: { id: horarioRealId },
+          relations: ['empleado'],
+        });
+        if (!horario) {
+          throw new NotFoundException('Horario no encontrado');
+        }
+        empleado = horario.empleado;
+      } else if (empleadoId) {
+        // Sino, usar el empleadoId directamente
+        const empleadoFound = await this.empleadoRepository.findOne({
+          where: { id: empleadoId },
+        });
+        if (!empleadoFound) {
+          throw new NotFoundException('Empleado no encontrado');
+        }
+        empleado = empleadoFound;
+      } else {
+        throw new BadRequestException(
+          'Debe proporcionar empleadoId o horarioId',
+        );
       }
 
       // Verificar que el horario está disponible
@@ -78,7 +130,7 @@ export class CitasService {
         where: {
           fecha: fechaObj,
           hora: hora,
-          empleado: { id: empleadoId },
+          empleado: { id: empleado.id },
           cancelada: false,
           estaActivo: true,
         },
@@ -88,6 +140,17 @@ export class CitasService {
         throw new BadRequestException('El horario ya está ocupado');
       }
 
+      // Obtener los servicios y calcular precios
+      const servicios = await this.serviciosRepository.findByIds(serviciosIds);
+      if (servicios.length !== serviciosIds.length) {
+        throw new NotFoundException('Uno o más servicios no encontrados');
+      }
+
+      const precioTotal = servicios.reduce(
+        (sum, servicio) => sum + Number(servicio.precio),
+        0,
+      );
+
       // Crear la cita
       const nuevaCita = this.citasRepository.create({
         fecha: fechaObj,
@@ -95,17 +158,32 @@ export class CitasService {
         horaInicio: hora,
         cliente: cliente,
         empleado: empleado,
-        precio: 0,
-        precioFull: 0,
+        precio: precioTotal,
+        precioFull: precioTotal,
         descuento: 0,
-        precioFinal: 0,
+        precioFinal: precioTotal,
+        anticipoPagado: anticipoPagado || 0,
+        stripePaymentIntentId: stripePaymentIntentId || undefined,
         cancelada: false,
         estaActivo: true,
         usuarioIdCreacion: cliente.usuario?.id || 1,
         usuarioIdActualizacion: cliente.usuario?.id || 1,
       });
 
-      return await this.citasRepository.save(nuevaCita);
+      const citaGuardada = await this.citasRepository.save(nuevaCita);
+
+      // Crear las relaciones con los servicios
+      for (const servicio of servicios) {
+        const citaToServicio = this.citasToServiciosRepository.create({
+          cita: citaGuardada,
+          servicio: servicio,
+          usuarioIdCreacion: cliente.usuario?.id || 1,
+          usuarioIdActualizacion: cliente.usuario?.id || 1,
+        });
+        await this.citasToServiciosRepository.save(citaToServicio);
+      }
+
+      return citaGuardada;
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -122,6 +200,8 @@ export class CitasService {
   async obtenerCitasEmpleado(
     empleadoId: number,
     fecha?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
   ): Promise<CitaEmpleadoVistaDto[]> {
     try {
       const query = this.citasRepository
@@ -136,8 +216,12 @@ export class CitasService {
         .addOrderBy('cita.hora', 'ASC');
 
       if (fecha) {
-        const fechaObj = new Date(fecha + 'T00:00:00');
-        query.andWhere('cita.fecha = :fecha', { fecha: fechaObj });
+        query.andWhere('DATE(cita.fecha) = :fecha', { fecha });
+      } else if (fechaInicio && fechaFin) {
+        query.andWhere('DATE(cita.fecha) BETWEEN :fechaInicio AND :fechaFin', {
+          fechaInicio,
+          fechaFin,
+        });
       }
 
       const citas = await query.getMany();
@@ -198,10 +282,17 @@ export class CitasService {
         },
         servicios:
           cita.citasToServicios
-            ?.map((cts) => cts.servicio?.nombre)
-            .filter(Boolean) || [],
+            ?.map((cts) => ({
+              id: cts.servicio?.id || 0,
+              nombre: cts.servicio?.nombre || '',
+              precio: Number(cts.servicio?.precio || 0),
+            }))
+            .filter((s) => s.nombre) || [],
         precio: cita.precioFinal || 0,
+        anticipoPagado: cita.anticipoPagado || 0,
+        saldoPendiente: (cita.precioFinal || 0) - (cita.anticipoPagado || 0),
         cancelada: cita.cancelada,
+        motivoCancelacion: cita.motivoCancelacion || undefined,
       }));
     } catch (error) {
       throw new InternalServerErrorException(
@@ -233,8 +324,97 @@ export class CitasService {
     }
   }
 
+  async cancelarOReagendarCita(
+    citaId: number,
+    motivo: string,
+    realizarReembolso: boolean,
+    nuevaFecha?: string,
+    nuevaHora?: string,
+  ): Promise<Cita> {
+    try {
+      const cita = await this.citasRepository.findOne({
+        where: { id: citaId },
+        relations: ['cliente', 'empleado', 'citasToServicios', 'citasToServicios.servicio'],
+      });
+
+      if (!cita) {
+        throw new NotFoundException('Cita no encontrada');
+      }
+
+      // Lógica de cancelación/reagendado
+      if (realizarReembolso) {
+        // CASO 1: Cancelación con reembolso (staff cancela)
+        // Realizar reembolso con Stripe
+        if (cita.stripePaymentIntentId) {
+          try {
+            console.log(`💳 Procesando reembolso de Stripe para PaymentIntent: ${cita.stripePaymentIntentId}`);
+            
+            const refund = await this.stripe.refunds.create({
+              payment_intent: cita.stripePaymentIntentId,
+              reason: 'requested_by_customer', // Stripe requiere una razón
+            });
+
+            console.log(`✅ Reembolso procesado exitosamente. Refund ID: ${refund.id}`);
+            console.log(`   - Monto: $${(refund.amount / 100).toFixed(2)} ${refund.currency.toUpperCase()}`);
+            console.log(`   - Estado: ${refund.status}`);
+            
+            // Guardar el ID del reembolso en el motivo para referencia
+            cita.motivoCancelacion = `${motivo} | Refund ID: ${refund.id}`;
+          } catch (stripeError) {
+            console.error('❌ Error al procesar reembolso de Stripe:', stripeError);
+            throw new InternalServerErrorException(
+              `Error al procesar el reembolso: ${stripeError.message}`
+            );
+          }
+        } else {
+          console.warn('⚠️ La cita no tiene stripePaymentIntentId, no se puede procesar reembolso');
+          cita.motivoCancelacion = motivo;
+        }
+
+        // Marcar la cita como cancelada
+        cita.cancelada = true;
+        console.log(`✅ Cita ${citaId} cancelada con reembolso. Motivo: ${motivo}`);
+      } else if (nuevaFecha && nuevaHora) {
+        // CASO 2: Reagendar sin reembolso (staff reagenda)
+        // Convertir string a Date (formato YYYY-MM-DD)
+        const [year, month, day] = nuevaFecha.split('-').map(Number);
+        const fechaDate = new Date(year, month - 1, day); // month es 0-indexed
+
+        // Actualizar la cita con la nueva fecha y hora
+        cita.fecha = fechaDate;
+        cita.hora = nuevaHora;
+        cita.motivoCancelacion = `Reagendada: ${motivo}`;
+        // NO marcar como cancelada si se reagenda
+        cita.cancelada = false;
+
+        console.log(`✅ Cita ${citaId} reagendada para ${nuevaFecha} a las ${nuevaHora}`);
+      } else {
+        // CASO 3: Cancelación sin reembolso y sin reagendar (cliente cancela)
+        cita.cancelada = true;
+        cita.motivoCancelacion = motivo;
+        console.log(`✅ Cita ${citaId} cancelada sin reembolso. Motivo: ${motivo}`);
+      }
+
+      return await this.citasRepository.save(cita);
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Error al procesar la cancelación/reagendado: ' + error.message,
+      );
+    }
+  }
+
   // Métodos específicos para administradores
-  async obtenerTodasLasCitas(fecha?: string): Promise<any[]> {
+  async obtenerTodasLasCitas(
+    fecha?: string,
+    fechaInicio?: string,
+    fechaFin?: string,
+  ): Promise<any[]> {
     try {
       let query = this.citasRepository
         .createQueryBuilder('cita')
@@ -248,7 +428,13 @@ export class CitasService {
         .addOrderBy('cita.hora', 'ASC');
 
       if (fecha) {
-        query = query.where('cita.fecha = :fecha', { fecha });
+        // Usar DATE() para comparar solo la parte de fecha sin tiempo
+        query = query.where('DATE(cita.fecha) = :fecha', { fecha });
+      } else if (fechaInicio && fechaFin) {
+        query = query.where('DATE(cita.fecha) BETWEEN :fechaInicio AND :fechaFin', {
+          fechaInicio,
+          fechaFin,
+        });
       }
 
       const citas = await query.getMany();

@@ -44,6 +44,12 @@ export class Cita extends GenericTableAttributes {
   @Column({ nullable: true })
   motivoCancelacion: string;
 
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  anticipoPagado: number;
+
+  @Column({ nullable: true })
+  stripePaymentIntentId: string;
+
   @ManyToOne(() => Cliente, (cliente) => cliente.citas, { nullable: false })
   cliente: Cliente;
 

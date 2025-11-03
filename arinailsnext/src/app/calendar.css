@@ -1,0 +1,208 @@
+/* Estilos personalizados para React Big Calendar - Diseño Compacto */
+.rbc-calendar {
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.rbc-header {
+  padding: 6px 4px;
+  font-weight: 600;
+  font-size: 11px;
+  border-bottom: 1px solid rgba(125, 150, 116, 0.2);
+  background-color: rgba(125, 150, 116, 0.05);
+  color: #3a4a34;
+  text-align: center;
+}
+
+.rbc-today {
+  background-color: rgba(125, 150, 116, 0.12) !important;
+}
+
+/* Toolbar - Barra de navegación superior compacta */
+.rbc-toolbar {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+  position: relative;
+  z-index: 10;
+}
+
+.rbc-toolbar-label {
+  flex-grow: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #3a4a34;
+  min-width: 100px;
+  text-transform: capitalize;
+}
+
+/* Grupo de botones de navegación compactos */
+.rbc-btn-group {
+  display: flex !important;
+  gap: 2px;
+  z-index: 10;
+}
+
+.rbc-toolbar button {
+  color: #3a4a34;
+  border: 1px solid rgba(125, 150, 116, 0.3);
+  padding: 3px 6px;
+  border-radius: 3px;
+  background-color: white;
+  font-weight: 500;
+  font-size: 10px;
+  transition: all 0.2s;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  user-select: none;
+  -webkit-user-select: none;
+  position: relative;
+  z-index: 10;
+}
+
+.rbc-toolbar button:hover {
+  background-color: rgba(125, 150, 116, 0.1);
+  border-color: #7d9674;
+}
+
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+  background-color: #7d9674;
+  color: white;
+  border-color: #7d9674;
+}
+
+/* Botones específicos de navegación */
+.rbc-toolbar button.rbc-btn-prev,
+.rbc-toolbar button.rbc-btn-next {
+  min-width: 20px;
+  padding: 3px 5px;
+  font-size: 12px;
+}
+
+.rbc-toolbar button.rbc-btn-today {
+  font-weight: 600;
+  padding: 3px 8px;
+}
+
+/* Vista del mes compacta */
+.rbc-month-view {
+  border: 1px solid rgba(125, 150, 116, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.rbc-month-row {
+  border-color: rgba(125, 150, 116, 0.15);
+  min-height: 32px;
+}
+
+.rbc-day-bg {
+  border-right: 1px solid rgba(125, 150, 116, 0.1);
+}
+
+.rbc-date-cell {
+  padding: 3px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.rbc-off-range-bg {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.rbc-off-range .rbc-date-cell {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+/* Eventos compactos */
+.rbc-event {
+  border-radius: 2px;
+  padding: 1px 3px;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 1px 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.rbc-event:focus {
+  outline: 1px solid #7d9674;
+  outline-offset: 1px;
+}
+
+.rbc-selected-cell {
+  background-color: rgba(125, 150, 116, 0.15);
+}
+
+.rbc-show-more {
+  font-size: 8px;
+  padding: 1px 2px;
+  color: #7d9674;
+  font-weight: 500;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+/* Responsivo para pantallas pequeñas */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .rbc-toolbar-label {
+    order: -1;
+    margin-bottom: 4px;
+  }
+  
+  .rbc-month-row {
+    min-height: 28px;
+  }
+  
+  .rbc-date-cell {
+    padding: 2px;
+    font-size: 10px;
+  }
+  
+  .rbc-event {
+    font-size: 8px;
+    padding: 0px 2px;
+  }
+}
+
+/* Ocultar solo los botones de cambio de vista (Semana, Día, Agenda) */
+.rbc-toolbar .rbc-btn-group:last-child {
+  display: none;
+}
+
+/* Asegurar que los botones de navegación sean visibles y clickeables */
+.rbc-toolbar button.rbc-btn-prev,
+.rbc-toolbar button.rbc-btn-next,
+.rbc-toolbar button.rbc-btn-today {
+  display: inline-block !important;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Estilos para las celdas del calendario con contador */
+.rbc-date-cell {
+  min-height: 55px !important;
+}
+
+.rbc-month-row {
+  min-height: 60px !important;
+}
+
+/* Ocultar eventos individuales en vista de mes */
+.rbc-event-content {
+  display: none;
+}

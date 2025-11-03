@@ -25,12 +25,19 @@ interface Props {
 }
 
 export const Map: React.FC<Props> = ({ address, latitude, longitude }) => {
+  const [isMounted, setIsMounted] = useState(false);
   const [pos, setPos] = useState<[number, number] | null>(
     latitude && longitude ? [latitude, longitude] : null
   );
   const [error, setError] = useState<string | null>(null);
 
+  // Ensure component only renders on client
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
     if (latitude && longitude) return;
     if (!address) return;
 
@@ -58,7 +65,16 @@ export const Map: React.FC<Props> = ({ address, latitude, longitude }) => {
       });
 
     return () => { cancelled = true; };
-  }, [address]);
+  }, [address, isMounted]);
+
+  // Don't render anything until mounted on client
+  if (!isMounted) {
+    return (
+      <Box sx={{ width: '100%', height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography sx={{ color: 'text.secondary' }}>Cargando mapa...</Typography>
+      </Box>
+    );
+  }
 
   if (error) {
     return (

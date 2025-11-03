@@ -18,7 +18,13 @@ export class ServiciosService {
 
   async findAll() {
     try {
-      return await this.servicioRepository.find();
+      // Ordenar primero por categoría (básicos primero) y luego por nombre
+      return await this.servicioRepository.find({
+        order: {
+          categoria: 'ASC', // 'basico' viene antes que 'extra' alfabéticamente
+          nombre: 'ASC',
+        },
+      });
     } catch (error) {
       throw new InternalServerErrorException(
         'Error al obtener los servicios: ' + error.message,

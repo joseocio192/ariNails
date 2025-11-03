@@ -40,60 +40,62 @@ export class HorariosService {
 
     const horariosDisponibles: HorarioDisponibleDto[] = [];
 
-    // Usar un Set para evitar duplicados del mismo empleado en la misma hora
-    const combinacionesUnicas = new Set<string>();
-
     for (const empleado of empleados) {
-      // Filtrar horarios para el día de la semana específico
+      // Filtrar horarios para el día de la semana específico o fecha específica
       const horariosDelDia = empleado.horarios.filter((horario) => {
         const fechaHorario = new Date(horario.desde);
-        return fechaHorario.getDay() === diaSemana;
+        const fechaHorarioStr = fechaHorario.toISOString().split('T')[0];
+        
+        // Verificar si coincide la fecha específica O el día de la semana
+        return fechaHorarioStr === fecha || fechaHorario.getDay() === diaSemana;
       });
 
       for (const horario of horariosDelDia) {
+        if (!horario.estaActivo) continue;
+
         const horaInicio = new Date(horario.desde);
         const horaFin = new Date(horario.hasta);
 
-        // Generar slots de 1 hora
-        const slots = this.generarSlots(horaInicio, horaFin);
+        // Obtener horas en formato HH:mm
+        const horaInicioStr = `${String(horaInicio.getHours()).padStart(2, '0')}:${String(horaInicio.getMinutes()).padStart(2, '0')}`;
+        const horaFinStr = `${String(horaFin.getHours()).padStart(2, '0')}:${String(horaFin.getMinutes()).padStart(2, '0')}`;
 
-        for (const slot of slots) {
-          // Crear clave única para empleado + hora
-          const claveUnica = `${empleado.id}-${slot}`;
+        // Verificar si hay alguna cita que ocupe CUALQUIER parte de este bloque de horario
+        const citasEnBloque = await this.citasRepository.find({
+          where: {
+            fecha: fechaObj,
+            empleado: { id: empleado.id },
+            cancelada: false,
+            estaActivo: true,
+          },
+        });
 
-          // Si ya existe esta combinación, saltarla
-          if (combinacionesUnicas.has(claveUnica)) {
-            continue;
-          }
+        // El bloque está disponible si NO hay ninguna cita
+        const disponible = citasEnBloque.length === 0;
 
-          // Verificar si ya existe una cita en ese horario
-          const citaExistente = await this.citasRepository.findOne({
-            where: {
-              fecha: fechaObj,
-              hora: slot,
-              empleado: { id: empleado.id },
-              cancelada: false,
-              estaActivo: true,
-            },
-          });
+        const nombreCompleto = `${empleado.usuario?.nombres || 'Sin nombre'} ${empleado.usuario?.apellidoPaterno || ''} ${empleado.usuario?.apellidoMaterno || ''}`.trim();
 
-          if (!citaExistente) {
-            combinacionesUnicas.add(claveUnica);
-            horariosDisponibles.push({
-              hora: slot,
-              empleado: {
-                id: empleado.id,
-                nombre: empleado.usuario?.nombres || 'Sin nombre',
-                apellidos:
-                  `${empleado.usuario?.apellidoPaterno || ''} ${empleado.usuario?.apellidoMaterno || ''}`.trim(),
-              },
-            });
-          }
-        }
+        horariosDisponibles.push({
+          horarioId: horario.id.toString(),
+          empleadoId: empleado.id,
+          empleadoNombre: nombreCompleto,
+          fecha: fecha,
+          horaInicio: horaInicioStr,
+          horaFin: horaFinStr,
+          disponible: disponible,
+          // Legacy fields para compatibilidad
+          hora: horaInicioStr,
+          empleado: {
+            id: empleado.id,
+            nombre: empleado.usuario?.nombres || 'Sin nombre',
+            apellidos:
+              `${empleado.usuario?.apellidoPaterno || ''} ${empleado.usuario?.apellidoMaterno || ''}`.trim(),
+          },
+        });
       }
     }
 
-    return horariosDisponibles.sort((a, b) => a.hora.localeCompare(b.hora));
+    return horariosDisponibles.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
   }
 
   async verificarDiaActivo(fecha: string): Promise<boolean> {
@@ -342,21 +344,22 @@ export class HorariosService {
     return fecha.toTimeString().slice(0, 5);
   }
 
-  private generarSlots(horaInicio: Date, horaFin: Date): string[] {
-    const slots: string[] = [];
-    const current = new Date(horaInicio);
-
-    while (current < horaFin) {
-      const hora = current.getHours().toString().padStart(2, '0');
-      const minutos = current.getMinutes().toString().padStart(2, '0');
-      slots.push(`${hora}:${minutos}`);
-
-      // Incrementar 1 hora
-      current.setHours(current.getHours() + 1);
-    }
-
-    return slots;
-  }
+  // MÉTODO DEPRECADO - Ya no se usa, los horarios se muestran como bloques completos
+  // private generarSlots(horaInicio: Date, horaFin: Date): string[] {
+  //   const slots: string[] = [];
+  //   const current = new Date(horaInicio);
+  //
+  //   while (current < horaFin) {
+  //     const hora = current.getHours().toString().padStart(2, '0');
+  //     const minutos = current.getMinutes().toString().padStart(2, '0');
+  //     slots.push(`${hora}:${minutos}`);
+  //
+  //     // Incrementar 1 hora
+  //     current.setHours(current.getHours() + 1);
+  //   }
+  //
+  //   return slots;
+  // }
 
   private obtenerFechaParaDiaSemana(diaSemana: number): string {
     // Obtener una fecha de referencia para el día de la semana especificado

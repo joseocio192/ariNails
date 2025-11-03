@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
@@ -21,13 +21,15 @@ import {
   Lock,
   Email,
   ArrowForward,
-  AccountCircle
+  AccountCircle,
+  Phone
 } from '@mui/icons-material';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRegister } from '../../hooks/useSimpleAuth';
+import { useRegister, useAuth } from '../../hooks/useSimpleAuth';
 import { ACCENT_GRADIENT, BACKGROUND, ACCENT_SOLID } from '../../theme/colors';
 import { RegisterData } from '../../../core/domain/entities/User';
+import { PhoneInput } from '../common/PhoneInput';
 
 // Estilos compartidos para los inputs (sin cambios)
 const inputSx = {
@@ -56,14 +58,32 @@ export const RegisterPage: React.FC = () => {
     apellidoMaterno: '',
     usuario: '',
     email: '',
+    telefono: '',
     password: '',
   });
+  const [countryCode, setCountryCode] = useState('+52'); // México por defecto
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const router = useRouter();
   const registerMutation = useRegister();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.rol?.nombre === 'admin') {
+        router.push('/dashboard/admin');
+      } else if (user.rol?.nombre === 'empleado') {
+        router.push('/dashboard/employee');
+      } else {
+        router.push('/dashboard/client');
+      }
+    }
+  }, [isAuthenticated, user, authLoading, router]);
 
   const handleInputChange = (field: keyof RegisterData) => (
     event: React.ChangeEvent<HTMLInputElement>
@@ -84,6 +104,9 @@ export const RegisterPage: React.FC = () => {
     if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.push('El email no es válido');
     }
+    if (!phoneNumber.trim() || phoneNumber.length < 7) {
+      errors.push('El número de teléfono no es válido');
+    }
     if (!formData.password || formData.password.length < 6) {
       errors.push('La contraseña debe tener al menos 6 caracteres');
     }
@@ -99,9 +122,17 @@ export const RegisterPage: React.FC = () => {
     if (validationErrors.length > 0) {
       return;
     }
-    registerMutation.mutate(formData, {
+    
+    // Combinar código de país y número de teléfono
+    const fullPhoneNumber = `${countryCode}${phoneNumber}`;
+    const dataToSubmit = {
+      ...formData,
+      telefono: fullPhoneNumber,
+    };
+    
+    registerMutation.mutate(dataToSubmit, {
       onSuccess: () => {
-        router.push('/profile');
+        router.push('/dashboard/client');
       },
     });
   };
@@ -127,15 +158,24 @@ export const RegisterPage: React.FC = () => {
             alignItems: 'center',
             mb: 4
           }}>
-            <Box sx={{
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              boxShadow: '0 8px 24px rgba(127, 161, 123, 0.3)',
-              background: 'white',
-              mb: 2,
-            }}>
+            <Box 
+              onClick={() => router.push('/')}
+              sx={{
+                width: 80,
+                height: 80,
+                borderRadius: '50%',
+                overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(127, 161, 123, 0.3)',
+                background: 'white',
+                mb: 2,
+                cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 12px 32px rgba(127, 161, 123, 0.4)',
+                },
+              }}
+            >
               <img
                 src="/logo.png"
                 alt="Ari Nails Logo"
@@ -277,6 +317,19 @@ export const RegisterPage: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
+                    sx={inputSx}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <PhoneInput
+                    countryCode={countryCode}
+                    phoneNumber={phoneNumber}
+                    onCountryCodeChange={setCountryCode}
+                    onPhoneNumberChange={setPhoneNumber}
+                    disabled={isLoading}
+                    required
+                    helperText="Ingresa tu número de teléfono"
                     sx={inputSx}
                   />
                 </Grid>

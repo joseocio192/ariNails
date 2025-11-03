@@ -33,21 +33,23 @@ const responseHandler = require('../utils/IResponse.handle');
 export class HorariosController {
   constructor(private readonly horariosService: HorariosService) {}
 
-  @Get('disponibles/:fecha')
+  @Get('disponibles')
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtener horarios disponibles para una fecha específica',
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'fecha',
     description: 'Fecha en formato YYYY-MM-DD',
     example: '2024-12-20',
+    required: true,
   })
   @ApiResponse({
     status: 200,
     description: 'Horarios disponibles obtenidos correctamente',
   })
-  async obtenerHorariosDisponibles(@Param('fecha') fecha: string) {
+  async obtenerHorariosDisponibles(@Query('fecha') fecha: string) {
     const horarios =
       await this.horariosService.obtenerHorariosDisponibles(fecha);
     return responseHandler(

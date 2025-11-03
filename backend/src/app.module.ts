@@ -8,7 +8,7 @@ import { ServiciosModule } from './servicios/servicios.module';
 import { ClientesModule } from './clientes/clientes.module';
 import { EmpleadosModule } from './empleados/empleados.module';
 import { CitasModule } from './citas/citas.module';
-// import { StripeModule } from './stripe/stripe.module';
+import { StripeModule } from './stripe/stripe.module';
 import { HorariosModule } from './horarios/horarios.module';
 import { SeederModule } from './seeder/seeder.module';
 import { ConfigModule } from '@nestjs/config';
@@ -37,7 +37,7 @@ import { ConfigModule } from '@nestjs/config';
     CitasModule,
     HorariosModule,
     SeederModule,
-    // StripeModule.forRootAsync(),
+    StripeModule.forRootAsync(),
   ],
   controllers: [AppController],
   providers: [AppService],

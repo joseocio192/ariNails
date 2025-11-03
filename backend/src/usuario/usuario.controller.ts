@@ -1,6 +1,7 @@
-import { Controller, Post, Body, Put, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Put, UseGuards, Patch, Request } from '@nestjs/common';
 import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto, UpdateUsuarioDto } from './dto/create-usuario.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -38,5 +39,41 @@ export class UsuarioController {
     const usuario =
       await this.usuarioService.updateUsuarioCliente(updateUsuarioDto);
     return IResponse(usuario, 'cliente actualizado exitosamente', true);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Patch('/profile')
+  @ApiOperation({ summary: 'Actualizar perfil del usuario (email, teléfono, dirección)' })
+  @ApiResponse({ status: 200, description: 'Perfil actualizado exitosamente' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  @ApiResponse({ status: 409, description: 'Email o teléfono ya está en uso' })
+  @ApiBody({ type: UpdateProfileDto })
+  async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    const userId = req.user.userId;
+    const usuario = await this.usuarioService.updateProfile(userId, updateProfileDto);
+    
+    // Construir el objeto de respuesta igual que en GET /profile
+    const profile = {
+      id: usuario.id,
+      usuario: usuario.usuario,
+      email: usuario.email,
+      nombres: usuario.nombres,
+      apellidoPaterno: usuario.apellidoPaterno,
+      apellidoMaterno: usuario.apellidoMaterno,
+      nombresCompletos: `${usuario.nombres} ${usuario.apellidoPaterno} ${usuario.apellidoMaterno || ''}`.trim(),
+      rol: {
+        id: usuario.rol_id,
+        nombre: usuario.rol?.nombre,
+        descripcion: usuario.rol?.descripcion,
+      },
+      clienteId: usuario.clientes && usuario.clientes.length > 0 ? usuario.clientes[0].id : null,
+      empleadoId: usuario.empleados && usuario.empleados.length > 0 ? usuario.empleados[0].id : null,
+      telefono: usuario.clientes && usuario.clientes.length > 0 ? usuario.clientes[0].telefono : null,
+      direccion: usuario.clientes && usuario.clientes.length > 0 ? usuario.clientes[0].direccion : null,
+      clientes: usuario.clientes || [],
+    };
+    
+    return IResponse(profile, 'Perfil actualizado exitosamente', true);
   }
 }

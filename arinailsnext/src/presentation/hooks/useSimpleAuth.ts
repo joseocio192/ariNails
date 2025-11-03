@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthContext } from '../providers/SimpleAuthProvider';
 import { DIContainer } from '@/core/di/DIContainer';
-import { LoginCredentials, RegisterData, User } from '@/core/domain/entities/User';
+import { LoginCredentials, RegisterData, User, UpdateProfileData } from '@/core/domain/entities/User';
 
 // Get the auth use cases from DI container
 const diContainer = DIContainer.getInstance();
@@ -49,6 +49,26 @@ export const useRegister = () => {
     },
     onError: (error: Error) => {
       console.error('Registration error:', error);
+    },
+  });
+};
+
+// Hook for profile update
+export const useUpdateProfile = () => {
+  const queryClient = useQueryClient();
+  const { setUser } = useAuthContext();
+
+  return useMutation<User, Error, UpdateProfileData>({
+    mutationFn: async (profileData: UpdateProfileData) => {
+      return await authUseCases.updateProfile(profileData);
+    },
+    onSuccess: (user: User) => {
+      setUser(user);
+      queryClient.setQueryData(['user'], user);
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+    onError: (error: Error) => {
+      console.error('Update profile error:', error);
     },
   });
 };
