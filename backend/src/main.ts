@@ -3,19 +3,34 @@ import { AppModule } from './app.module';
 import * as dotenv from 'dotenv';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 
 dotenv.config();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  
+  // Habilitar CORS primero para que aplique a todos los recursos
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:3001'],
+    origin: ['http://localhost:5173', 'http://localhost:5000', 'http://localhost:3001', 'http://localhost:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
+  
+  // Servir archivos estáticos desde public/uploads con prefix /uploads/
+  app.useStaticAssets(join(__dirname, '..', 'public', 'uploads'), {
+    prefix: '/uploads/',
+    // Habilitar CORS para archivos estáticos
+    setHeaders: (res) => {
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    },
+  });
+  
+  app.useGlobalPipes(new ValidationPipe());
   const config = new DocumentBuilder()
     .setTitle('AriNails API')
     .setDescription(
@@ -32,7 +47,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const httpAdapter = app.getHttpAdapter();
-  httpAdapter.get('/health', (_req, res) => {
+  httpAdapter.get('/health', (_req, res: any) => {
     res.status(200).json({ status: 'OK' });
   });
 

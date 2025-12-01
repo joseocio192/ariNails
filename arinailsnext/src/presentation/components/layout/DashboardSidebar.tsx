@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Drawer,
@@ -30,9 +30,11 @@ import {
   DesignServices as ServicesIcon,
   AdminPanelSettings,
   WorkOutline as WorkIcon,
+  Palette as PaletteIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { DIContainer } from '@/core/di/DIContainer';
+import { LogoutConfirmModal } from '../common/LogoutConfirmModal';
 
 const DRAWER_WIDTH = 280;
 const DRAWER_WIDTH_COLLAPSED = 64;
@@ -73,17 +75,30 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const diContainer = DIContainer.getInstance();
   const authRepository = diContainer.getAuthRepository();
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   const roleColor = isAdmin ? '#dc2626' : '#2563eb';
   const roleLabel = isAdmin ? 'Administrador' : 'Empleado';
   const RoleIcon = isAdmin ? AdminPanelSettings : WorkIcon;
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutModalOpen(false);
+  };
+
+  const handleLogoutConfirm = async () => {
     try {
       await authRepository.logout();
-      router.push('/');
+      setLogoutModalOpen(false);
+      // Forzar refresh completo de la página
+      window.location.href = '/';
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
+      // Incluso si hay error, forzar el refresh para limpiar el estado
+      window.location.href = '/';
     }
   };
 
@@ -116,6 +131,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       },
     ] : []),
     {
+      id: 'disenos',
+      label: 'Diseños de Uñas',
+      icon: <PaletteIcon />,
+    },
+    {
       id: 'divider-1',
       label: '',
       icon: null,
@@ -141,7 +161,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       id: 'logout',
       label: 'Cerrar Sesión',
       icon: <LogoutIcon />,
-      action: handleLogout,
+      action: handleLogoutClick,
     },
   ];
 
@@ -291,25 +311,32 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   }
 
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: collapsed ? DRAWER_WIDTH_COLLAPSED : DRAWER_WIDTH,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
+    <>
+      <Drawer
+        variant="permanent"
+        sx={{
           width: collapsed ? DRAWER_WIDTH_COLLAPSED : DRAWER_WIDTH,
-          boxSizing: 'border-box',
-          borderRight: 'none',
-          background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
-          boxShadow: '2px 0 8px rgba(0,0,0,0.05)',
-          transition: theme.transitions.create('width', {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-          }),
-        },
-      }}
-    >
-      {drawerContent}
-    </Drawer>
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: collapsed ? DRAWER_WIDTH_COLLAPSED : DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            borderRight: 'none',
+            background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
+            boxShadow: '2px 0 8px rgba(0,0,0,0.05)',
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
+    </>
   );
 };

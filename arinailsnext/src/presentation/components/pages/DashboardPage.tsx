@@ -38,6 +38,9 @@ import { FiltersComponent } from '../filters/FiltersComponent';
 import { DashboardSidebar } from '../layout/DashboardSidebar';
 import { DashboardProfileView } from '../profile/DashboardProfileView';
 import { HorariosManagement } from '../horarios/HorariosManagement';
+import { ClientesManagementModule } from '../admin/ClientesManagementModule';
+import { EmpleadosManagementModule } from '../admin/EmpleadosManagementModule';
+import { DisenosManagementModule } from '../admin/DisenosManagementModule';
 
 import type { Cita, CalendarEvent } from '../../../core/domain/types/citas';
 
@@ -321,6 +324,12 @@ export const DashboardPage: React.FC = () => {
                                 <DashboardProfileView />
                             ) : selectedModule === 'settings' ? (
                                 <HorariosManagement />
+                            ) : selectedModule === 'usuarios' ? (
+                                <ClientesManagementModule />
+                            ) : selectedModule === 'empleados' ? (
+                                <EmpleadosManagementModule />
+                            ) : selectedModule === 'disenos' ? (
+                                <DisenosManagementModule />
                             ) : selectedModule === 'dashboard' || selectedModule === 'calendar' ? (
                                 <>
                                     {/* Header con título y botón de configurar horarios */}

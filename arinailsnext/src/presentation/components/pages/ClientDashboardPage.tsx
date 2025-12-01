@@ -30,12 +30,15 @@ import {
   Person as PersonIcon,
   Logout as LogoutIcon,
   ChevronLeft as ChevronLeftIcon,
+  Palette as PaletteIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useUserRole } from '../../hooks/useUserRole';
 import { DIContainer } from '@/core/di/DIContainer';
 import { AgendarCitaModule, MisCitasModule } from '../client';
+import { NailARModule } from '../cliente/NailARModule';
 import { ProfilePage } from './ProfilePage';
+import { LogoutConfirmModal } from '../common/LogoutConfirmModal';
 import { ACCENT_GRADIENT, ACCENT_SOLID, CARD_BG } from '../../theme/colors';
 
 const drawerWidth = 280;
@@ -63,6 +66,7 @@ export const ClientDashboardPage: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [selectedModule, setSelectedModule] = useState<string>('agendar-cita');
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
   // Obtener repositorio de autenticación
   const diContainer = DIContainer.getInstance();
@@ -114,9 +118,18 @@ export const ClientDashboardPage: React.FC = () => {
     }
   };
 
-  const handleLogout = () => {
-    authRepository.logout();
-    router.push('/login');
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutModalOpen(false);
+  };
+
+  const handleLogoutConfirm = async () => {
+    await authRepository.logout();
+    setLogoutModalOpen(false);
+    window.location.href = '/login';
   };
 
   const menuItems: MenuItem[] = [
@@ -148,6 +161,12 @@ export const ClientDashboardPage: React.FC = () => {
       component: <MisCitasModule />,
     },
     {
+      id: 'disenos-ar',
+      label: 'Probador Virtual',
+      icon: <PaletteIcon />,
+      component: <NailARModule />,
+    },
+    {
       id: 'divider-2',
       label: '',
       icon: null,
@@ -164,7 +183,7 @@ export const ClientDashboardPage: React.FC = () => {
       id: 'logout',
       label: 'Cerrar Sesión',
       icon: <LogoutIcon />,
-      action: handleLogout,
+      action: handleLogoutClick,
       isExternal: true,
     },
   ];
@@ -436,6 +455,11 @@ export const ClientDashboardPage: React.FC = () => {
           {selectedMenuItem?.component}
         </Container>
       </Box>
+      <LogoutConfirmModal
+        open={logoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </Box>
   );
 };
